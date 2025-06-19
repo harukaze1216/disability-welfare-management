@@ -19,31 +19,12 @@ export const Login: React.FC = () => {
     setError('');
     setIsLoading(true);
 
-    // デモ用認証
-    if (email === 'demo@hq.com' && password === 'demo12345') {
-      try {
-        // HQ管理者としてログイン
-        await login(email, password);
-      } catch (err) {
+    try {
+      await login(email, password);
+    } catch (err) {
+      if ((email === 'demo@hq.com' || email === 'demo@fc.com') && password === 'demo12345') {
         setError('デモログインに失敗しました。');
-      }
-    } else if (email === 'demo@fc.com' && password === 'demo12345') {
-      try {
-        // FC管理者としてログイン
-        await login(email, password);
-      } catch (err) {
-        setError('デモログインに失敗しました。');
-      }
-    } else {
-      if (password.length < 8) {
-        setError('パスワードは8文字以上で入力してください');
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        await login(email, password);
-      } catch (err) {
+      } else {
         setError('ログインに失敗しました。メールアドレスとパスワードを確認してください。');
       }
     }
