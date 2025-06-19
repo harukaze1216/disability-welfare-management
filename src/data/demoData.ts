@@ -116,68 +116,69 @@ export const demoChildren: Child[] = [
   }
 ];
 
-// デモ用日次実績データ
-export const demoDailyReports: DailyReport[] = [
-  {
-    id: 'report-1',
-    reportId: 'report-1',
-    orgId: 'demo-fc-org',
-    date: '2024-12-18',
-    children: [
-      {
-        childId: 'child-1',
-        arrival: '09:00',
-        departure: '15:00',
-        pickup: true,
-        drop: true,
-        addOns: ['addon-1', 'addon-3']
-      },
-      {
-        childId: 'child-2',
-        arrival: '10:00',
-        departure: '14:30',
-        pickup: false,
-        drop: true,
-        addOns: ['addon-2']
-      },
-      {
-        childId: 'child-3',
-        pickup: false,
-        drop: false,
-        addOns: []
+// デモ用日次実績データ（月次データ生成）
+const generateDemoReports = () => {
+  const reports: DailyReport[] = [];
+  const today = new Date();
+  
+  // 過去30日分のデータを生成
+  for (let i = 0; i < 30; i++) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    const dateStr = date.toISOString().split('T')[0];
+    
+    // 平日のみ生成（土日をスキップ）
+    const dayOfWeek = date.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) continue;
+    
+    // ランダムな出席状況を生成
+    const attendanceRate = 0.75 + Math.random() * 0.25; // 75-100%の出席率
+    const children = ['child-1', 'child-2', 'child-3'];
+    
+    const reportChildren = children.map(childId => {
+      const isPresent = Math.random() < attendanceRate;
+      
+      if (!isPresent) {
+        return {
+          childId,
+          pickup: false,
+          drop: false,
+          addOns: []
+        };
       }
-    ]
-  },
-  {
-    id: 'report-2',
-    reportId: 'report-2',
-    orgId: 'demo-fc-org',
-    date: '2024-12-17',
-    children: [
-      {
-        childId: 'child-1',
-        arrival: '09:30',
-        departure: '15:30',
-        pickup: true,
-        drop: true,
-        addOns: ['addon-1', 'addon-3', 'addon-4']
-      },
-      {
-        childId: 'child-2',
-        arrival: '09:00',
-        departure: '15:00',
-        pickup: true,
-        drop: true,
-        addOns: ['addon-2', 'addon-3']
-      },
-      {
-        childId: 'child-3',
-        arrival: '10:00',
-        departure: '16:00',
-        pickup: true,
-        drop: true,
-        addOns: ['addon-1', 'addon-3', 'addon-4']
-      }
-    ]
+      
+      // 出席時の時間とアドオンをランダム生成
+      const arrivalHour = 9 + Math.floor(Math.random() * 2); // 9-10時
+      const arrivalMinute = Math.floor(Math.random() * 4) * 15; // 0, 15, 30, 45分
+      const departureHour = 14 + Math.floor(Math.random() * 3); // 14-16時
+      const departureMinute = Math.floor(Math.random() * 4) * 15;
+      
+      const arrival = `${arrivalHour.toString().padStart(2, '0')}:${arrivalMinute.toString().padStart(2, '0')}`;
+      const departure = `${departureHour.toString().padStart(2, '0')}:${departureMinute.toString().padStart(2, '0')}`;
+      
+      const possibleAddOns = ['addon-1', 'addon-2', 'addon-3', 'addon-4', 'addon-5'];
+      const addOns = possibleAddOns.filter(() => Math.random() < 0.4); // 40%の確率で各アドオン
+      
+      return {
+        childId,
+        arrival,
+        departure,
+        pickup: Math.random() < 0.8,
+        drop: Math.random() < 0.9,
+        addOns
+      };
+    });
+    
+    reports.push({
+      id: `report-${dateStr}`,
+      reportId: `report-${dateStr}`,
+      orgId: 'demo-fc-org',
+      date: dateStr,
+      children: reportChildren
+    });
   }
-];
+  
+  return reports.reverse(); // 古い順にソート
+};
+
+export const demoDailyReports: DailyReport[] = generateDemoReports();
