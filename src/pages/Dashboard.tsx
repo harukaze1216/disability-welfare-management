@@ -8,7 +8,6 @@ import '../styles/design-system.css';
 export const Dashboard: React.FC = () => {
   const { userData } = useAuth();
   const { data: reports } = useFirestore<DailyReport>('dailyReports');
-  // const { data: children } = useFirestore<Child>('children');
   const { data: addOns } = useFirestore<AddOnMaster>('addOnMasters');
   
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month'>('month');
@@ -18,12 +17,6 @@ export const Dashboard: React.FC = () => {
     if (!userData?.orgId) return [];
     return reports.filter(report => report.orgId === userData.orgId);
   }, [reports, userData?.orgId]);
-  
-  // 将来の機能拡張用（現在は未使用）
-  // const orgChildren = useMemo(() => {
-  //   if (!userData?.orgId) return [];
-  //   return children.filter(child => child.orgId === userData.orgId);
-  // }, [children, userData?.orgId]);
 
   // 期間フィルタ
   const periodReports = useMemo(() => {
@@ -222,10 +215,10 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* KPIカード */}
+        {/* KPIカードエリア - 2x2グリッド */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gridTemplateColumns: 'repeat(2, 1fr)',
           gap: 'var(--space-6)',
           marginBottom: 'var(--space-8)',
         }}>
@@ -415,175 +408,267 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* トレンドグラフ */}
-        <div className="card-glass" style={{ padding: 'var(--space-6)', marginBottom: 'var(--space-8)' }}>
-          <h3 style={{ fontSize: 'var(--font-size-xl)', fontWeight: '700', marginBottom: 'var(--space-4)' }}>
-            📊 トレンド分析
-          </h3>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: `repeat(${Math.min(trendData.length, 7)}, 1fr)`,
-            gap: 'var(--space-4)',
-            marginTop: 'var(--space-4)',
-          }}>
-            {trendData.slice(-7).map((data) => {
-              const total = data.attendance + data.absence;
-              const attendanceHeight = total > 0 ? (data.attendance / total) * 100 : 0;
-              const maxRevenue = Math.max(...trendData.map(d => d.revenue));
-              const revenueHeight = maxRevenue > 0 ? (data.revenue / maxRevenue) * 60 + 20 : 20;
-              
-              return (
-                <div key={data.date} style={{ textAlign: 'center' }}>
-                  <div style={{
-                    height: '100px',
-                    display: 'flex',
+        {/* メインコンテンツエリア - サイドバイサイド */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '2fr 1fr',
+          gap: 'var(--space-6)',
+          marginBottom: 'var(--space-8)',
+        }}>
+          {/* トレンドグラフ */}
+          <div className="card-glass" style={{ padding: 'var(--space-6)' }}>
+            <h3 style={{ fontSize: 'var(--font-size-xl)', fontWeight: '700', marginBottom: 'var(--space-4)' }}>
+              📊 トレンド分析
+            </h3>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-around',
+              alignItems: 'flex-end',
+              height: '200px',
+              padding: 'var(--space-4)',
+              background: 'var(--neutral-50)',
+              borderRadius: 'var(--radius-lg)',
+              marginTop: 'var(--space-4)',
+            }}>
+              {trendData.slice(-10).map((data) => {
+                const maxAttendance = Math.max(...trendData.map(d => d.attendance + d.absence));
+                const attendanceHeight = maxAttendance > 0 ? (data.attendance / maxAttendance) * 140 + 20 : 20;
+                const absenceHeight = maxAttendance > 0 ? (data.absence / maxAttendance) * 140 + 10 : 10;
+                const maxRevenue = Math.max(...trendData.map(d => d.revenue));
+                const revenueHeight = maxRevenue > 0 ? (data.revenue / maxRevenue) * 160 + 20 : 20;
+                
+                return (
+                  <div key={data.date} style={{ 
+                    display: 'flex', 
                     flexDirection: 'column',
-                    justifyContent: 'flex-end',
-                    marginBottom: 'var(--space-2)',
-                    position: 'relative',
+                    alignItems: 'center',
+                    position: 'relative'
                   }}>
-                    {/* 出席率バー */}
                     <div style={{
-                      height: `${attendanceHeight}px`,
-                      background: 'linear-gradient(to top, var(--success-500), var(--success-300))',
-                      borderRadius: 'var(--radius-sm)',
+                      position: 'relative',
+                      width: '24px',
+                      height: '160px',
+                      marginBottom: 'var(--space-2)',
+                    }}>
+                      {/* 収益バー（背景） */}
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '0',
+                        left: '0',
+                        width: '24px',
+                        height: `${revenueHeight}px`,
+                        background: 'linear-gradient(to top, var(--primary-200), var(--primary-100))',
+                        borderRadius: 'var(--radius-sm)',
+                        opacity: '0.6',
+                      }} />
+                      
+                      {/* 出席バー */}
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '0',
+                        left: '4px',
+                        width: '16px',
+                        height: `${attendanceHeight}px`,
+                        background: 'linear-gradient(to top, var(--success-600), var(--success-400))',
+                        borderRadius: 'var(--radius-sm)',
+                        zIndex: 2,
+                      }} />
+                      
+                      {/* 欠席バー */}
+                      {data.absence > 0 && (
+                        <div style={{
+                          position: 'absolute',
+                          bottom: `${attendanceHeight}px`,
+                          left: '4px',
+                          width: '16px',
+                          height: `${absenceHeight}px`,
+                          background: 'linear-gradient(to top, var(--error-500), var(--error-300))',
+                          borderRadius: 'var(--radius-sm)',
+                          zIndex: 2,
+                        }} />
+                      )}
+                    </div>
+                    
+                    <div style={{ 
+                      fontSize: 'var(--font-size-xs)', 
+                      color: 'var(--neutral-600)',
                       marginBottom: 'var(--space-1)',
-                      minHeight: '2px',
-                    }} />
-                    {/* 収益バー */}
-                    <div style={{
-                      height: `${revenueHeight}px`,
-                      background: 'linear-gradient(to top, var(--primary-500), var(--primary-300))',
-                      borderRadius: 'var(--radius-sm)',
-                      minHeight: '2px',
-                    }} />
+                      fontWeight: '600',
+                      textAlign: 'center'
+                    }}>
+                      {new Date(data.date).toLocaleDateString('ja-JP', { 
+                        month: 'numeric', 
+                        day: 'numeric' 
+                      })}
+                    </div>
+                    
+                    <div style={{ 
+                      fontSize: 'var(--font-size-xs)', 
+                      color: 'var(--success-600)',
+                      fontWeight: '700'
+                    }}>
+                      ✓{data.attendance}
+                    </div>
+                    
+                    {data.absence > 0 && (
+                      <div style={{ 
+                        fontSize: 'var(--font-size-xs)', 
+                        color: 'var(--error-600)',
+                        fontWeight: '700'
+                      }}>
+                        ✗{data.absence}
+                      </div>
+                    )}
                   </div>
-                  <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--neutral-600)' }}>
-                    {new Date(data.date).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })}
-                  </div>
-                  <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--success-600)' }}>
-                    {data.attendance}人
-                  </div>
-                  <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--primary-600)' }}>
-                    ¥{Math.round(data.revenue / 1000)}K
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: 'var(--space-6)',
-            marginTop: 'var(--space-4)',
-            fontSize: 'var(--font-size-sm)',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-              <div style={{
-                width: '12px',
-                height: '12px',
-                background: 'linear-gradient(135deg, var(--success-500), var(--success-300))',
-                borderRadius: '2px',
-              }} />
-              <span>出席数</span>
+                );
+              })}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-              <div style={{
-                width: '12px',
-                height: '12px',
-                background: 'linear-gradient(135deg, var(--primary-500), var(--primary-300))',
-                borderRadius: '2px',
-              }} />
-              <span>収益 (千円)</span>
+            
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: 'var(--space-6)',
+              marginTop: 'var(--space-4)',
+              fontSize: 'var(--font-size-sm)',
+              padding: 'var(--space-3)',
+              background: 'var(--neutral-100)',
+              borderRadius: 'var(--radius-lg)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                <div style={{
+                  width: '12px',
+                  height: '12px',
+                  background: 'linear-gradient(135deg, var(--success-600), var(--success-400))',
+                  borderRadius: '2px',
+                }} />
+                <span>出席数</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                <div style={{
+                  width: '12px',
+                  height: '12px',
+                  background: 'linear-gradient(135deg, var(--error-500), var(--error-300))',
+                  borderRadius: '2px',
+                }} />
+                <span>欠席数</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                <div style={{
+                  width: '12px',
+                  height: '12px',
+                  background: 'linear-gradient(135deg, var(--primary-200), var(--primary-100))',
+                  borderRadius: '2px',
+                }} />
+                <span>収益トレンド</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* アラート・通知 */}
-        <div className="card-glass" style={{ padding: 'var(--space-6)' }}>
-          <h3 style={{ fontSize: 'var(--font-size-xl)', fontWeight: '700', marginBottom: 'var(--space-4)' }}>
-            🔔 アラート・通知
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            {kpis.attendanceRate < 80 && (
-              <div style={{
-                padding: 'var(--space-4)',
-                background: 'linear-gradient(135deg, var(--warning-50), var(--warning-100))',
-                border: '1px solid var(--warning-200)',
-                borderRadius: 'var(--radius-lg)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 'var(--space-3)',
-              }}>
-                <span style={{ fontSize: '1.5rem' }}>⚠️</span>
-                <div>
-                  <div style={{ fontWeight: '600', color: 'var(--warning-700)' }}>出席率が低下しています</div>
-                  <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--warning-600)' }}>
-                    現在の出席率: {kpis.attendanceRate.toFixed(1)}% (目標: 80%以上)
+          {/* アラート・通知 */}
+          <div className="card-glass" style={{ padding: 'var(--space-6)' }}>
+            <h3 style={{ fontSize: 'var(--font-size-xl)', fontWeight: '700', marginBottom: 'var(--space-4)' }}>
+              🔔 アラート・通知
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+              {kpis.attendanceRate < 80 && (
+                <div style={{
+                  padding: 'var(--space-4)',
+                  background: 'linear-gradient(135deg, var(--warning-50), var(--warning-100))',
+                  border: '1px solid var(--warning-200)',
+                  borderRadius: 'var(--radius-lg)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--space-3)',
+                }}>
+                  <span style={{ fontSize: '1.5rem' }}>⚠️</span>
+                  <div>
+                    <div style={{ fontWeight: '600', color: 'var(--warning-700)' }}>出席率が低下しています</div>
+                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--warning-600)' }}>
+                      現在の出席率: {kpis.attendanceRate.toFixed(1)}% (目標: 80%以上)
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-            
-            {kpis.averageAttendancePerDay < 2 && (
-              <div style={{
-                padding: 'var(--space-4)',
-                background: 'linear-gradient(135deg, var(--error-50), var(--error-100))',
-                border: '1px solid var(--error-200)',
-                borderRadius: 'var(--radius-lg)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 'var(--space-3)',
-              }}>
-                <span style={{ fontSize: '1.5rem' }}>🚨</span>
-                <div>
-                  <div style={{ fontWeight: '600', color: 'var(--error-700)' }}>稼働率が非常に低いです</div>
-                  <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--error-600)' }}>
-                    日平均出席数: {kpis.averageAttendancePerDay.toFixed(1)}人
+              )}
+              
+              {kpis.averageAttendancePerDay < 2 && (
+                <div style={{
+                  padding: 'var(--space-4)',
+                  background: 'linear-gradient(135deg, var(--error-50), var(--error-100))',
+                  border: '1px solid var(--error-200)',
+                  borderRadius: 'var(--radius-lg)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--space-3)',
+                }}>
+                  <span style={{ fontSize: '1.5rem' }}>🚨</span>
+                  <div>
+                    <div style={{ fontWeight: '600', color: 'var(--error-700)' }}>稼働率が非常に低いです</div>
+                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--error-600)' }}>
+                      日平均出席数: {kpis.averageAttendancePerDay.toFixed(1)}人
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-            
-            {kpis.attendanceRate >= 90 && (
-              <div style={{
-                padding: 'var(--space-4)',
-                background: 'linear-gradient(135deg, var(--success-50), var(--success-100))',
-                border: '1px solid var(--success-200)',
-                borderRadius: 'var(--radius-lg)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 'var(--space-3)',
-              }}>
-                <span style={{ fontSize: '1.5rem' }}>🎉</span>
-                <div>
-                  <div style={{ fontWeight: '600', color: 'var(--success-700)' }}>素晴らしい出席率です！</div>
-                  <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--success-600)' }}>
-                    出席率: {kpis.attendanceRate.toFixed(1)}% - 目標を大幅に上回っています
+              )}
+              
+              {kpis.attendanceRate >= 90 && (
+                <div style={{
+                  padding: 'var(--space-4)',
+                  background: 'linear-gradient(135deg, var(--success-50), var(--success-100))',
+                  border: '1px solid var(--success-200)',
+                  borderRadius: 'var(--radius-lg)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--space-3)',
+                }}>
+                  <span style={{ fontSize: '1.5rem' }}>🎉</span>
+                  <div>
+                    <div style={{ fontWeight: '600', color: 'var(--success-700)' }}>素晴らしい出席率です！</div>
+                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--success-600)' }}>
+                      出席率: {kpis.attendanceRate.toFixed(1)}% - 目標を大幅に上回っています
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-            
-            {kpis.attendanceRate >= 80 && kpis.attendanceRate < 90 && kpis.averageAttendancePerDay >= 2 && (
-              <div style={{
-                padding: 'var(--space-4)',
-                background: 'linear-gradient(135deg, var(--neutral-50), var(--neutral-100))',
-                border: '1px solid var(--neutral-200)',
-                borderRadius: 'var(--radius-lg)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 'var(--space-3)',
-              }}>
-                <span style={{ fontSize: '1.5rem' }}>✅</span>
-                <div>
-                  <div style={{ fontWeight: '600', color: 'var(--neutral-700)' }}>運営状況は良好です</div>
-                  <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--neutral-600)' }}>
-                    全ての指標が目標値を満たしています
+              )}
+              
+              {kpis.attendanceRate >= 80 && kpis.attendanceRate < 90 && kpis.averageAttendancePerDay >= 2 && (
+                <div style={{
+                  padding: 'var(--space-4)',
+                  background: 'linear-gradient(135deg, var(--neutral-50), var(--neutral-100))',
+                  border: '1px solid var(--neutral-200)',
+                  borderRadius: 'var(--radius-lg)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--space-3)',
+                }}>
+                  <span style={{ fontSize: '1.5rem' }}>✅</span>
+                  <div>
+                    <div style={{ fontWeight: '600', color: 'var(--neutral-700)' }}>運営状況は良好です</div>
+                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--neutral-600)' }}>
+                      全ての指標が目標値を満たしています
+                    </div>
                   </div>
                 </div>
+              )}
+              
+              {/* 収益情報カード */}
+              <div style={{
+                padding: 'var(--space-4)',
+                background: 'linear-gradient(135deg, var(--primary-50), var(--primary-100))',
+                border: '1px solid var(--primary-200)',
+                borderRadius: 'var(--radius-lg)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
+                  <span style={{ fontSize: '1.2rem' }}>💡</span>
+                  <div style={{ fontWeight: '600', color: 'var(--primary-700)' }}>今月の予測</div>
+                </div>
+                <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--primary-600)' }}>
+                  月末予測売上: ¥{Math.round((kpis.totalRevenue / kpis.totalDays) * 22).toLocaleString()}
+                </div>
+                <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--primary-600)' }}>
+                  予測出席数: {Math.round((kpis.totalAttendance / kpis.totalDays) * 22)}人
+                </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
