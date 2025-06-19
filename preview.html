@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>フランチャイズ実績管理システム - プレビュー</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+        .container { display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .login-form { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        .title { text-align: center; margin-bottom: 2rem; color: #333; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; color: #555; }
+        .form-group input { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; }
+        .btn { width: 100%; padding: 0.75rem; background: #007bff; color: white; border: none; border-radius: 4px; font-size: 1rem; cursor: pointer; }
+        .btn:hover { background: #0056b3; }
+        .demo-info { background: #e7f3ff; padding: 1rem; border-radius: 4px; margin-top: 1rem; color: #0066cc; }
+        .features { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-top: 2rem; }
+        .features h3 { margin-bottom: 1rem; color: #333; }
+        .feature-list { list-style: none; }
+        .feature-list li { padding: 0.5rem 0; color: #666; }
+        .feature-list li:before { content: "✓ "; color: #28a745; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div>
+            <div class="login-form">
+                <h1 class="title">フランチャイズ実績管理システム</h1>
+                
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="email">メールアドレス</label>
+                        <input type="email" id="email" name="email" required value="demo@example.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">パスワード</label>
+                        <input type="password" id="password" name="password" required minlength="8" value="password123">
+                    </div>
+                    
+                    <button type="submit" class="btn">ログイン</button>
+                </form>
+                
+                <div class="demo-info">
+                    <strong>デモ用アカウント：</strong><br>
+                    Email: demo@example.com<br>
+                    Password: password123
+                </div>
+            </div>
+            
+            <div class="features">
+                <h3>実装済み機能</h3>
+                <ul class="feature-list">
+                    <li>Firebase Authentication によるログイン機能</li>
+                    <li>HQ管理者・FC管理者の役割ベース認証</li>
+                    <li>React + TypeScript による型安全な開発</li>
+                    <li>Firestore データベース連携</li>
+                    <li>レスポンシブデザイン対応</li>
+                </ul>
+                
+                <h3>今後実装予定の機能</h3>
+                <ul class="feature-list">
+                    <li>日次実績入力画面</li>
+                    <li>在籍児童マスタ管理</li>
+                    <li>事業所管理機能</li>
+                    <li>ダッシュボードとKPI表示</li>
+                    <li>CSV/PDFエクスポート機能</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // デモ用の簡単な認証
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (email === 'demo@example.com' && password === 'password123') {
+                // ダッシュボード画面をシミュレート
+                document.body.innerHTML = `
+                    <div style="padding: 2rem; background: #f8f9fa; min-height: 100vh;">
+                        <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid #eee; padding-bottom: 1rem;">
+                            <h1>ダッシュボード</h1>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <span>HQ管理者 - demo@example.com</span>
+                                <button onclick="location.reload()" style="padding: 0.5rem 1rem; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">ログアウト</button>
+                            </div>
+                        </header>
+
+                        <div style="display: grid; gap: 2rem;">
+                            <div style="background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                <h2>HQ管理者メニュー</h2>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                                    <button style="padding: 1rem; border-radius: 4px; border: 1px solid #007bff; background: white; color: #007bff; cursor: pointer;">事業所管理</button>
+                                    <button style="padding: 1rem; border-radius: 4px; border: 1px solid #007bff; background: white; color: #007bff; cursor: pointer;">ユーザー管理</button>
+                                    <button style="padding: 1rem; border-radius: 4px; border: 1px solid #007bff; background: white; color: #007bff; cursor: pointer;">加算マスタ管理</button>
+                                    <button style="padding: 1rem; border-radius: 4px; border: 1px solid #007bff; background: white; color: #007bff; cursor: pointer;">全体ダッシュボード</button>
+                                </div>
+                            </div>
+                            
+                            <div style="background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                <h2>今日の実績（サンプル）</h2>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                                    <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 4px;">
+                                        <div style="font-size: 2rem; font-weight: bold; color: #007bff;">12</div>
+                                        <div>今日の利用者数</div>
+                                    </div>
+                                    <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 4px;">
+                                        <div style="font-size: 2rem; font-weight: bold; color: #28a745;">¥45,600</div>
+                                        <div>今日の売上</div>
+                                    </div>
+                                    <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 4px;">
+                                        <div style="font-size: 2rem; font-weight: bold; color: #ffc107;">4.2h</div>
+                                        <div>平均支援時間</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                alert('メールアドレスまたはパスワードが正しくありません。');
+            }
+        });
+    </script>
+</body>
+</html>
