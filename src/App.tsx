@@ -14,7 +14,7 @@ import './styles/design-system.css';
 function App() {
   return (
     <AuthProvider>
-      <Router basename="/disability-welfare-management">
+      <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/unauthorized" element={<Unauthorized />} />

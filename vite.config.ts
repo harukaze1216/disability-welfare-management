@@ -4,5 +4,8 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/disability-welfare-management/', // GitHub Pages用のサブパス設定
+  base: './', // 相対パス設定
+  build: {
+    outDir: 'docs'
+  }
 })
