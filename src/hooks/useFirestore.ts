@@ -1,37 +1,37 @@
 import { useState, useEffect } from 'react';
 import { 
-  collection, 
-  doc, 
-  getDocs, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  query,
-  QueryConstraint
-} from 'firebase/firestore';
-import type { DocumentData } from 'firebase/firestore';
-import { db } from '../config/firebase';
+  demoOrganizations, 
+  demoUsers, 
+  demoAddOnMasters, 
+  demoChildren, 
+  demoDailyReports 
+} from '../data/demoData';
 
-interface FirestoreItem extends DocumentData {
+interface FirestoreItem {
   id?: string;
+  [key: string]: any;
 }
+
+// デモデータのマップ
+const demoDataMap: Record<string, any[]> = {
+  'organizations': demoOrganizations,
+  'users': demoUsers,
+  'addOnMasters': demoAddOnMasters,
+  'children': demoChildren,
+  'dailyReports': demoDailyReports
+};
 
 export const useFirestore = <T extends FirestoreItem>(collectionName: string) => {
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = async (constraints: QueryConstraint[] = []) => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const collectionRef = collection(db, collectionName);
-      const q = constraints.length > 0 ? query(collectionRef, ...constraints) : collectionRef;
-      const snapshot = await getDocs(q);
-      const items = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as T[];
-      setData(items);
+      // デモデータを取得
+      const demoData = demoDataMap[collectionName] || [];
+      setData(demoData as T[]);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'データの取得に失敗しました');
@@ -42,11 +42,14 @@ export const useFirestore = <T extends FirestoreItem>(collectionName: string) =>
 
   const addData = async (newData: Omit<T, 'id'>) => {
     try {
-      const collectionRef = collection(db, collectionName);
-      const docRef = await addDoc(collectionRef, newData);
-      const newItem = { id: docRef.id, ...newData } as T;
+      const id = `${collectionName}-${Date.now()}`;
+      const newItem = { id, ...newData } as T;
+      
+      // メモリ内でデータを追加
+      demoDataMap[collectionName] = [...(demoDataMap[collectionName] || []), newItem];
       setData(prev => [...prev, newItem]);
-      return docRef.id;
+      
+      return id;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'データの追加に失敗しました');
       throw err;
@@ -55,8 +58,11 @@ export const useFirestore = <T extends FirestoreItem>(collectionName: string) =>
 
   const updateData = async (id: string, updatedData: Partial<Omit<T, 'id'>>) => {
     try {
-      const docRef = doc(db, collectionName, id);
-      await updateDoc(docRef, updatedData);
+      // メモリ内でデータを更新
+      demoDataMap[collectionName] = demoDataMap[collectionName].map(item => 
+        item.id === id ? { ...item, ...updatedData } : item
+      );
+      
       setData(prev => prev.map(item => 
         item.id === id ? { ...item, ...updatedData } : item
       ));
@@ -68,8 +74,8 @@ export const useFirestore = <T extends FirestoreItem>(collectionName: string) =>
 
   const deleteData = async (id: string) => {
     try {
-      const docRef = doc(db, collectionName, id);
-      await deleteDoc(docRef);
+      // メモリ内でデータを削除
+      demoDataMap[collectionName] = demoDataMap[collectionName].filter(item => item.id !== id);
       setData(prev => prev.filter(item => item.id !== id));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'データの削除に失敗しました');
