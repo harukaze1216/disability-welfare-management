@@ -1,12 +1,26 @@
 import React, { useState } from 'react';
 import { useFirestore } from '../hooks/useFirestore';
-import { Layout } from '../components/Layout';
+import { ModernLayout } from '../components/ModernLayout';
 import type { Organization } from '../types';
 
 export const OrganizationManagement: React.FC = () => {
   const { data: organizations, loading, error, addData, updateData, deleteData } = useFirestore<Organization>('organizations');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
+  
+  console.log('OrganizationManagement Debug:', { organizations, loading, error });
+  
+  if (error) {
+    return (
+      <ModernLayout>
+        <div style={{ padding: '2rem', color: 'red' }}>
+          <h2>エラーが発生しました</h2>
+          <p>{error}</p>
+        </div>
+      </ModernLayout>
+    );
+  }
+  
   const [formData, setFormData] = useState({
     name: '',
     prefecture: '',
@@ -73,11 +87,10 @@ export const OrganizationManagement: React.FC = () => {
     });
   };
 
-  if (loading) return <Layout title="事業所管理"><div>読み込み中...</div></Layout>;
-  if (error) return <Layout title="事業所管理"><div style={{ color: 'red' }}>エラー: {error}</div></Layout>;
+  if (loading) return <ModernLayout><div>読み込み中...</div></ModernLayout>;
 
   return (
-    <Layout title="事業所管理">
+    <ModernLayout>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div></div>
         <button
@@ -304,6 +317,6 @@ export const OrganizationManagement: React.FC = () => {
           </div>
         </div>
       )}
-    </Layout>
+    </ModernLayout>
   );
 };
