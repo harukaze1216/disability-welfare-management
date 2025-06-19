@@ -854,4 +854,46 @@
                                 <td>22人</td>
                                 <td>73.3%</td>
                                 <td>¥124,200</td>
-                                <td><span class="
+                                <td><span class="status-badge status-warning">要注意</span></td>
+                                <td>
+                                    <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.8rem;">
+                                        詳細
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // タブ切り替え機能
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // アニメーション
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-in');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.kpi-card, .chart-card, .data-table').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>

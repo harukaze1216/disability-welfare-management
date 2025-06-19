@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import '../styles/design-system.css';
@@ -11,7 +11,6 @@ export const ModernLayout: React.FC<ModernLayoutProps> = ({ children }) => {
   const { userData, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -21,244 +20,203 @@ export const ModernLayout: React.FC<ModernLayoutProps> = ({ children }) => {
     }
   };
 
-  const menuItems = userData?.role === 'HQ' ? [
+  const menuItems = [
     { icon: '📊', label: 'ダッシュボード', path: '/dashboard' },
+    { icon: '📝', label: '日報入力', path: '/daily-reports' },
     { icon: '🏢', label: '事業所管理', path: '/organizations' },
     { icon: '👥', label: 'ユーザー管理', path: '/users' },
-    { icon: '💰', label: '加算マスタ', path: '/addon-master' },
-    { icon: '👶', label: '在籍児童', path: '/children' },
-    { icon: '📝', label: '日次実績', path: '/daily-reports' },
+    { icon: '👶', label: '児童管理', path: '/children' },
+    { icon: '💰', label: '加算設定', path: '/addon-master' },
     { icon: '📈', label: 'レポート', path: '/reports' },
-  ] : [
-    { icon: '📊', label: 'ダッシュボード', path: '/dashboard' },
-    { icon: '👶', label: '在籍児童', path: '/children' },
-    { icon: '📝', label: '日次実績', path: '/daily-reports' },
-    { icon: '📈', label: 'レポート', path: '/reports' },
+    { icon: '⚙️', label: '設定', path: '/settings' },
   ];
 
-  const sidebarStyle: React.CSSProperties = {
-    position: 'fixed',
-    left: 0,
-    top: 0,
-    height: '100vh',
-    width: sidebarCollapsed ? '80px' : '280px',
-    background: 'linear-gradient(180deg, #1e40af 0%, #1d4ed8 50%, #2563eb 100%)',
-    backdropFilter: 'blur(20px)',
-    borderRight: '1px solid rgba(255, 255, 255, 0.1)',
-    transition: 'all 350ms cubic-bezier(0.4, 0, 0.2, 1)',
-    zIndex: 1000,
-    overflow: 'hidden',
-  };
-
-  const mainContentStyle: React.CSSProperties = {
-    marginLeft: sidebarCollapsed ? '80px' : '280px',
-    minHeight: '100vh',
-    transition: 'margin-left 350ms cubic-bezier(0.4, 0, 0.2, 1)',
-    background: 'linear-gradient(135deg, #f9fafb 0%, #eff6ff 100%)',
-  };
-
-  const headerStyle: React.CSSProperties = {
-    height: '80px',
-    background: 'rgba(255, 255, 255, 0.9)',
-    backdropFilter: 'blur(20px)',
-    borderBottom: '1px solid rgba(229, 231, 235, 0.5)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '0 2rem',
-    position: 'sticky',
-    top: 0,
-    zIndex: 100,
-  };
-
   return (
-    <div style={{ display: 'flex', fontFamily: 'var(--font-family-sans)' }}>
-      {/* Modern Sidebar */}
-      <div style={sidebarStyle}>
-        {/* Logo Section */}
-        <div style={{
-          padding: '1.5rem',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
+    <div style={{
+      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      minHeight: '100vh',
+      color: '#1a1a1a',
+      overflowX: 'hidden',
+    }}>
+      <style>{`
+        @keyframes gradientShift {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+      `}</style>
+      
+      <div style={{
+        display: 'flex',
+        minHeight: '100vh',
+        backdropFilter: 'blur(10px)',
+      }}>
+        {/* サイドバー */}
+        <aside style={{
+          width: '280px',
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(20px)',
+          borderRight: '1px solid rgba(255, 255, 255, 0.2)',
+          padding: '2rem 0',
+          boxShadow: '4px 0 24px rgba(0, 0, 0, 0.1)',
+          position: 'relative',
+          overflow: 'hidden',
         }}>
+          {/* グラデーションボーダー */}
           <div style={{
-            width: '40px',
-            height: '40px',
-            background: 'linear-gradient(135deg, #ffffff, #e0f2fe)',
-            borderRadius: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '1.5rem',
-            flexShrink: 0,
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '4px',
+            background: 'linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4)',
+            backgroundSize: '300% 100%',
+            animation: 'gradientShift 6s ease-in-out infinite',
+          }} />
+
+          <div style={{
+            padding: '0 2rem 2rem 2rem',
+            borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+            marginBottom: '2rem',
           }}>
-            🏥
-          </div>
-          {!sidebarCollapsed && (
-            <div>
-              <h1 style={{
-                color: 'white',
-                fontSize: '1.25rem',
-                fontWeight: '700',
-                margin: 0,
-                lineHeight: 1.2,
-              }}>
-                福祉管理
-              </h1>
-              <p style={{
-                color: 'rgba(255, 255, 255, 0.7)',
-                fontSize: '0.75rem',
-                margin: 0,
-              }}>
-                Management System
-              </p>
+            <h1 style={{
+              fontSize: '1.5rem',
+              fontWeight: '700',
+              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              margin: 0,
+            }}>
+              FranchiseHQ
+            </h1>
+            <div style={{
+              color: '#666',
+              fontSize: '0.9rem',
+              marginTop: '0.25rem',
+            }}>
+              実績管理システム
             </div>
-          )}
-        </div>
+          </div>
 
-        {/* Navigation Menu */}
-        <nav style={{ padding: '1rem 0', flex: 1 }}>
-          {menuItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: sidebarCollapsed ? '12px 24px' : '12px 24px',
-                  background: isActive 
-                    ? 'linear-gradient(90deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1))'
-                    : 'transparent',
-                  border: 'none',
-                  color: 'white',
-                  cursor: 'pointer',
-                  transition: 'all 200ms ease',
-                  borderRight: isActive ? '3px solid white' : '3px solid transparent',
-                  fontSize: '0.875rem',
-                  fontWeight: isActive ? '600' : '500',
-                  justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                    e.currentTarget.style.transform = 'translateX(4px)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.transform = 'translateX(0)';
-                  }
-                }}
-              >
-                <span style={{ fontSize: '1.25rem', flexShrink: 0 }}>{item.icon}</span>
-                {!sidebarCollapsed && <span>{item.label}</span>}
-              </button>
-            );
-          })}
-        </nav>
+          <nav style={{ padding: '0 1rem' }}>
+            {menuItems.map((item) => (
+              <div key={item.path} style={{ marginBottom: '0.5rem' }}>
+                <button
+                  onClick={() => navigate(item.path)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    width: '100%',
+                    padding: '1rem 1.5rem',
+                    textDecoration: 'none',
+                    color: location.pathname === item.path ? '#667eea' : '#555',
+                    border: 'none',
+                    borderRadius: '12px',
+                    background: location.pathname === item.path 
+                      ? 'rgba(102, 126, 234, 0.1)' 
+                      : 'transparent',
+                    cursor: 'pointer',
+                    fontSize: '1rem',
+                    fontWeight: '500',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: location.pathname === item.path ? 'translateX(8px)' : 'translateX(0)',
+                    position: 'relative',
+                    overflow: 'hidden',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (location.pathname !== item.path) {
+                      e.currentTarget.style.background = 'rgba(102, 126, 234, 0.05)';
+                      e.currentTarget.style.color = '#667eea';
+                      e.currentTarget.style.transform = 'translateX(8px)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (location.pathname !== item.path) {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.color = '#555';
+                      e.currentTarget.style.transform = 'translateX(0)';
+                    }
+                  }}
+                >
+                  <div style={{
+                    width: '20px',
+                    height: '20px',
+                    marginRight: '1rem',
+                    fontSize: '1rem',
+                    transition: 'transform 0.3s ease',
+                  }}>
+                    {item.icon}
+                  </div>
+                  {item.label}
+                </button>
+              </div>
+            ))}
+          </nav>
 
-        {/* Collapse Toggle */}
-        <div style={{ padding: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
-          <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            style={{
-              width: '100%',
-              padding: '12px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              border: 'none',
-              borderRadius: '8px',
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '1.25rem',
-              transition: 'all 200ms ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-              e.currentTarget.style.transform = 'scale(1.05)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
-          >
-            {sidebarCollapsed ? '→' : '←'}
-          </button>
-        </div>
-      </div>
-
-      {/* Main Content Area */}
-      <div style={mainContentStyle}>
-        {/* Modern Header */}
-        <header style={headerStyle}>
+          {/* ユーザー情報 */}
           <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '1rem',
+            position: 'absolute',
+            bottom: '2rem',
+            left: '1rem',
+            right: '1rem',
+            padding: '1rem',
+            background: 'rgba(255, 255, 255, 0.9)',
+            borderRadius: '12px',
+            backdropFilter: 'blur(10px)',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
           }}>
             <div style={{
-              padding: '8px 16px',
-              background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
-              borderRadius: '20px',
               fontSize: '0.875rem',
               fontWeight: '600',
-              color: '#1d4ed8',
+              color: '#1a1a1a',
+              marginBottom: '0.25rem',
+            }}>
+              {userData?.email}
+            </div>
+            <div style={{
+              fontSize: '0.75rem',
+              color: '#666',
+              marginBottom: '1rem',
             }}>
               {userData?.role === 'HQ' ? 'HQ管理者' : 'FC管理者'}
             </div>
-          </div>
-
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '1rem',
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '8px 12px',
-              background: 'rgba(107, 114, 128, 0.1)',
-              borderRadius: '12px',
-              fontSize: '0.875rem',
-              color: '#4b5563',
-            }}>
-              <div style={{
-                width: '8px',
-                height: '8px',
-                background: '#10b981',
-                borderRadius: '50%',
-              }}></div>
-              {userData?.email}
-            </div>
-
             <button
               onClick={handleLogout}
-              className="btn btn-secondary"
               style={{
-                padding: '8px 16px',
+                width: '100%',
+                padding: '0.5rem 1rem',
+                background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
                 fontSize: '0.875rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 2px 8px rgba(239, 68, 68, 0.3)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(239, 68, 68, 0.3)';
               }}
             >
               ログアウト
             </button>
           </div>
-        </header>
+        </aside>
 
-        {/* Page Content */}
+        {/* メインコンテンツ */}
         <main style={{
+          flex: 1,
           padding: '2rem',
-          minHeight: 'calc(100vh - 80px)',
+          background: 'rgba(255, 255, 255, 0.05)',
         }}>
-          <div className="fade-in">
-            {children}
-          </div>
+          {children}
         </main>
       </div>
     </div>

@@ -123,498 +123,935 @@ export const Dashboard: React.FC = () => {
     };
   }, [periodReports, addOns]);
 
-  // 週別・月別トレンド
-  const trendData = useMemo(() => {
-    const groups: Record<string, { attendance: number; absence: number; revenue: number }> = {};
-    
-    periodReports.forEach(report => {
-      const date = new Date(report.date);
-      let groupKey: string;
-      
-      if (selectedPeriod === 'week') {
-        // 週別（日付）
-        groupKey = date.toISOString().split('T')[0];
-      } else {
-        // 月別（週単位）
-        const weekStart = new Date(date);
-        weekStart.setDate(date.getDate() - date.getDay());
-        groupKey = weekStart.toISOString().split('T')[0];
-      }
-      
-      if (!groups[groupKey]) {
-        groups[groupKey] = { attendance: 0, absence: 0, revenue: 0 };
-      }
-      
-      report.children.forEach(childReport => {
-        if (childReport.arrival && childReport.departure) {
-          groups[groupKey].attendance++;
-          
-          // 収益計算
-          const arrivalTime = new Date(`2000-01-01T${childReport.arrival}`);
-          const departureTime = new Date(`2000-01-01T${childReport.departure}`);
-          const supportHours = (departureTime.getTime() - arrivalTime.getTime()) / (1000 * 60 * 60);
-          groups[groupKey].revenue += supportHours * 800;
-          
-          childReport.addOns.forEach(addOnId => {
-            const addOn = addOns.find(a => a.addOnId === addOnId);
-            if (addOn) {
-              groups[groupKey].revenue += addOn.unitValue;
-            }
-          });
-        } else {
-          groups[groupKey].absence++;
-        }
-      });
-    });
-    
-    return Object.entries(groups)
-      .map(([date, data]) => ({ date, ...data }))
-      .sort((a, b) => a.date.localeCompare(b.date));
-  }, [periodReports, selectedPeriod, addOns]);
-
   return (
     <ModernLayout>
-      <div className="dashboard-container">
-        <div className="slide-in-up" style={{ padding: '2rem', position: 'relative', zIndex: 10 }}>
-          {/* ヘッダー */}
+        {/* ヘッダー */}
+        <header style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '2rem',
+          background: 'rgba(255, 255, 255, 0.95)',
+          padding: '1.5rem 2rem',
+          borderRadius: '20px',
+          backdropFilter: 'blur(20px)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+        }}>
+          <div>
+            <h2 style={{
+              fontSize: '2rem',
+              fontWeight: '700',
+              marginBottom: '0.5rem',
+              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              margin: 0,
+            }}>
+              実績ダッシュボード
+            </h2>
+            <div style={{
+              color: '#666',
+              fontSize: '0.9rem',
+            }}>
+              2025年6月19日 (木) 14:30 JST
+            </div>
+          </div>
           <div style={{
             display: 'flex',
-            justifyContent: 'space-between',
+            gap: '1rem',
             alignItems: 'center',
-            marginBottom: '3rem',
           }}>
-            <div>
-              <h1 className="glass-title" style={{
-                fontSize: '2.5rem',
-                fontWeight: '800',
-                marginBottom: '0.5rem',
-                background: 'linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.8) 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}>
-                📊 ダッシュボード
-              </h1>
-              <p className="glass-subtitle" style={{
-                fontSize: '1.125rem',
-              }}>
-                事業所の運営状況とKPIを確認
-              </p>
-            </div>
-
-            <div className="period-selector">
-              <button
-                onClick={() => setSelectedPeriod('week')}
-                className={`period-btn ${selectedPeriod === 'week' ? 'active' : ''}`}
-              >
-                📅 過去1週間
-              </button>
-              <button
-                onClick={() => setSelectedPeriod('month')}
-                className={`period-btn ${selectedPeriod === 'month' ? 'active' : ''}`}
-              >
-                📅 過去1ヶ月
-              </button>
-            </div>
+            <button style={{
+              padding: '0.75rem 1.5rem',
+              background: 'rgba(255, 255, 255, 0.9)',
+              color: '#667eea',
+              border: '1px solid rgba(102, 126, 234, 0.3)',
+              borderRadius: '12px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+            }}>
+              📊 レポート出力
+            </button>
+            <button style={{
+              padding: '0.75rem 1.5rem',
+              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+            }}>
+              ➕ 日報入力
+            </button>
           </div>
+        </header>
 
-          {/* KPIカードエリア - 2x2グリッド */}
-          <div className="kpi-grid" style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '2rem',
-            marginBottom: '3rem',
+        {/* タブ */}
+        <div style={{
+          display: 'flex',
+          gap: '0.5rem',
+          marginBottom: '2rem',
+          background: 'rgba(255, 255, 255, 0.95)',
+          padding: '0.5rem',
+          borderRadius: '16px',
+          backdropFilter: 'blur(20px)',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+        }}>
+          <button
+            onClick={() => setSelectedPeriod('week')}
+            style={{
+              flex: 1,
+              padding: '1rem 2rem',
+              border: 'none',
+              background: selectedPeriod === 'week' 
+                ? 'linear-gradient(135deg, #667eea, #764ba2)' 
+                : 'transparent',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              fontWeight: '600',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              color: selectedPeriod === 'week' ? 'white' : '#1a1a1a',
+              boxShadow: selectedPeriod === 'week' ? '0 4px 15px rgba(102, 126, 234, 0.4)' : 'none',
+            }}
+          >
+            全体
+          </button>
+          <button
+            onClick={() => setSelectedPeriod('month')}
+            style={{
+              flex: 1,
+              padding: '1rem 2rem',
+              border: 'none',
+              background: selectedPeriod === 'month' 
+                ? 'linear-gradient(135deg, #667eea, #764ba2)' 
+                : 'transparent',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              fontWeight: '600',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              color: selectedPeriod === 'month' ? 'white' : '#1a1a1a',
+              boxShadow: selectedPeriod === 'month' ? '0 4px 15px rgba(102, 126, 234, 0.4)' : 'none',
+            }}
+          >
+            児童発達支援
+          </button>
+          <button style={{
+            flex: 1,
+            padding: '1rem 2rem',
+            border: 'none',
+            background: 'transparent',
+            borderRadius: '12px',
+            cursor: 'pointer',
+            fontWeight: '600',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            color: '#1a1a1a',
           }}>
-            {/* 出席状況 */}
-            <div className="kpi-card success glass-enhanced fade-in-scale">
-              <div className="kpi-icon success">
-                👥
-              </div>
-              <h3 className="glass-title" style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>
-                出席状況
-              </h3>
-              <p className="kpi-label" style={{ marginBottom: '1.5rem' }}>
-                {selectedPeriod === 'week' ? '過去1週間' : '過去1ヶ月'}
-              </p>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
-                <div>
-                  <div className="kpi-value" style={{ color: '#4ade80' }}>
-                    {kpis.totalAttendance}
-                  </div>
-                  <div className="kpi-label">出席数</div>
-                </div>
-                <div>
-                  <div className="kpi-value" style={{ color: '#f87171' }}>
-                    {kpis.totalAbsence}
-                  </div>
-                  <div className="kpi-label">欠席数</div>
-                </div>
-              </div>
-              
-              <div style={{ 
-                padding: '1rem', 
-                background: 'rgba(74, 222, 128, 0.1)', 
-                borderRadius: '12px',
-                border: '1px solid rgba(74, 222, 128, 0.2)'
-              }}>
-                <div className="kpi-value" style={{ fontSize: '1.75rem', color: '#4ade80' }}>
-                  {kpis.attendanceRate.toFixed(1)}%
-                </div>
-                <div className="kpi-label">出席率</div>
-              </div>
-            </div>
+            放課後デイ
+          </button>
+          <button style={{
+            flex: 1,
+            padding: '1rem 2rem',
+            border: 'none',
+            background: 'transparent',
+            borderRadius: '12px',
+            cursor: 'pointer',
+            fontWeight: '600',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            color: '#1a1a1a',
+          }}>
+            事業所別
+          </button>
+        </div>
 
-            {/* 収益情報 */}
-            <div className="kpi-card primary glass-enhanced fade-in-scale">
-              <div className="kpi-icon primary">
+        {/* KPIカード */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: '1.5rem',
+          marginBottom: '2rem',
+        }}>
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.95)',
+            padding: '2rem',
+            borderRadius: '20px',
+            backdropFilter: 'blur(20px)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            position: 'relative',
+            overflow: 'hidden',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            borderTop: '4px solid #667eea',
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '1rem',
+            }}>
+              <div style={{
+                fontSize: '0.9rem',
+                color: '#666',
+                fontWeight: '600',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}>
+                本日売上
+              </div>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'rgba(102, 126, 234, 0.1)',
+                color: '#667eea',
+              }}>
                 💰
               </div>
-              <h3 className="glass-title" style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>
-                収益状況
-              </h3>
-              <p className="kpi-label" style={{ marginBottom: '1.5rem' }}>
-                推定売上
-              </p>
-              
-              <div style={{ marginBottom: '1.5rem' }}>
-                <div className="kpi-value" style={{ color: '#60a5fa' }}>
-                  ¥{kpis.totalRevenue.toLocaleString()}
-                </div>
-                <div className="kpi-label">総売上</div>
-              </div>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
-                <div>
-                  <div className="kpi-value" style={{ fontSize: '1.5rem', color: 'rgba(255, 255, 255, 0.9)' }}>
-                    {kpis.totalUnits.toFixed(1)}
-                  </div>
-                  <div className="kpi-label">総単位数</div>
-                </div>
-                <div>
-                  <div className="kpi-value" style={{ fontSize: '1.5rem', color: 'rgba(255, 255, 255, 0.9)' }}>
-                    {kpis.averageSupportTime.toFixed(1)}h
-                  </div>
-                  <div className="kpi-label">平均支援時間</div>
-                </div>
-              </div>
             </div>
-
-            {/* 稼働状況 */}
-            <div className="kpi-card warning glass-enhanced fade-in-scale">
-              <div className="kpi-icon warning">
-                📈
-              </div>
-              <h3 className="glass-title" style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>
-                稼働状況
-              </h3>
-              <p className="kpi-label" style={{ marginBottom: '1.5rem' }}>
-                運営効率
-              </p>
-              
-              <div style={{ marginBottom: '1.5rem' }}>
-                <div className="kpi-value" style={{ color: '#34d399' }}>
-                  {kpis.averageAttendancePerDay.toFixed(1)}
-                </div>
-                <div className="kpi-label">日平均出席数</div>
-              </div>
-              
-              <div>
-                <div className="kpi-value" style={{ fontSize: '1.5rem', color: 'rgba(255, 255, 255, 0.9)' }}>
-                  {kpis.totalDays}日
-                </div>
-                <div className="kpi-label">営業日数</div>
-              </div>
+            <div style={{
+              fontSize: '2.5rem',
+              fontWeight: '700',
+              marginBottom: '0.5rem',
+              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>
+              ¥{kpis.totalRevenue.toLocaleString()}
             </div>
-
-            {/* 人気アドオン */}
-            <div className="kpi-card info glass-enhanced fade-in-scale">
-              <div className="kpi-icon info">
-                🏆
-              </div>
-              <h3 className="glass-title" style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>
-                人気アドオン
-              </h3>
-              <p className="kpi-label" style={{ marginBottom: '1.5rem' }}>
-                利用頻度TOP3
-              </p>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {kpis.topAddOns.map((addOn, index) => (
-                  <div key={addOn.name} style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '0.75rem',
-                    background: index === 0 ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                    borderRadius: '8px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ fontSize: '1.2rem' }}>
-                        {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
-                      </span>
-                      <span style={{ fontSize: '0.875rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.9)' }}>
-                        {addOn.name}
-                      </span>
-                    </div>
-                    <span style={{ fontSize: '0.875rem', fontWeight: '700', color: '#60a5fa' }}>
-                      {addOn.count}回
-                    </span>
-                  </div>
-                ))}
-                {kpis.topAddOns.length === 0 && (
-                  <div style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.875rem' }}>
-                    データがありません
-                  </div>
-                )}
-              </div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              fontSize: '0.9rem',
+              fontWeight: '600',
+              color: '#10b981',
+            }}>
+              ↗️ +12.5% 前日比
+            </div>
+            <div style={{
+              height: '60px',
+              marginTop: '1rem',
+              background: 'linear-gradient(90deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))',
+              borderRadius: '8px',
+              position: 'relative',
+              overflow: 'hidden',
+            }}>
+              <div style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                height: '60%',
+                width: '100%',
+                background: 'linear-gradient(90deg, #667eea, #764ba2)',
+                opacity: 0.3,
+              }} />
             </div>
           </div>
 
-          {/* メインコンテンツエリア - サイドバイサイド */}
-          <div className="content-grid" style={{
-            display: 'grid',
-            gridTemplateColumns: '2fr 1fr',
-            gap: '2rem',
-            marginBottom: '3rem',
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.95)',
+            padding: '2rem',
+            borderRadius: '20px',
+            backdropFilter: 'blur(20px)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            position: 'relative',
+            overflow: 'hidden',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            borderTop: '4px solid #4ecdc4',
           }}>
-            {/* トレンドグラフ */}
-            <div className="chart-container glass-enhanced">
-              <h3 className="glass-title" style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>
-                📊 トレンド分析
-              </h3>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '1rem',
+            }}>
               <div style={{
-                display: 'flex',
-                justifyContent: 'space-around',
-                alignItems: 'flex-end',
-                height: '240px',
-                padding: '1.5rem',
-                background: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '12px',
-                marginTop: '1rem',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                fontSize: '0.9rem',
+                color: '#666',
+                fontWeight: '600',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
               }}>
-                {trendData.slice(-10).map((data) => {
-                  const maxAttendance = Math.max(...trendData.map(d => d.attendance + d.absence));
-                  const attendanceHeight = maxAttendance > 0 ? (data.attendance / maxAttendance) * 160 + 20 : 20;
-                  const absenceHeight = maxAttendance > 0 ? (data.absence / maxAttendance) * 160 + 10 : 10;
-                  const maxRevenue = Math.max(...trendData.map(d => d.revenue));
-                  const revenueHeight = maxRevenue > 0 ? (data.revenue / maxRevenue) * 180 + 20 : 20;
-                  
-                  return (
-                    <div key={data.date} style={{ 
-                      display: 'flex', 
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      position: 'relative'
-                    }}>
-                      <div style={{
-                        position: 'relative',
-                        width: '28px',
-                        height: '180px',
-                        marginBottom: '0.75rem',
-                      }}>
-                        {/* 収益バー（背景） */}
-                        <div className="chart-bar" style={{
-                          position: 'absolute',
-                          bottom: '0',
-                          left: '0',
-                          width: '28px',
-                          height: `${revenueHeight}px`,
-                          background: 'linear-gradient(to top, rgba(96, 165, 250, 0.4), rgba(96, 165, 250, 0.2))',
-                          borderRadius: '6px',
-                          opacity: '0.7',
-                        }} />
-                        
-                        {/* 出席バー */}
-                        <div className="chart-bar" style={{
-                          position: 'absolute',
-                          bottom: '0',
-                          left: '6px',
-                          width: '16px',
-                          height: `${attendanceHeight}px`,
-                          background: 'linear-gradient(to top, #4ade80, #22c55e)',
-                          borderRadius: '4px',
-                          zIndex: 2,
-                          boxShadow: '0 4px 12px rgba(74, 222, 128, 0.4)',
-                        }} />
-                        
-                        {/* 欠席バー */}
-                        {data.absence > 0 && (
-                          <div className="chart-bar" style={{
-                            position: 'absolute',
-                            bottom: `${attendanceHeight}px`,
-                            left: '6px',
-                            width: '16px',
-                            height: `${absenceHeight}px`,
-                            background: 'linear-gradient(to top, #f87171, #ef4444)',
-                            borderRadius: '4px',
-                            zIndex: 2,
-                            boxShadow: '0 4px 12px rgba(248, 113, 113, 0.4)',
-                          }} />
-                        )}
-                      </div>
-                      
-                      <div style={{ 
-                        fontSize: '0.75rem', 
-                        color: 'rgba(255, 255, 255, 0.8)',
-                        marginBottom: '0.25rem',
-                        fontWeight: '600',
-                        textAlign: 'center'
-                      }}>
-                        {new Date(data.date).toLocaleDateString('ja-JP', { 
-                          month: 'numeric', 
-                          day: 'numeric' 
-                        })}
-                      </div>
-                      
-                      <div style={{ 
-                        fontSize: '0.75rem', 
-                        color: '#4ade80',
-                        fontWeight: '700'
-                      }}>
-                        ✓{data.attendance}
-                      </div>
-                      
-                      {data.absence > 0 && (
-                        <div style={{ 
-                          fontSize: '0.75rem', 
-                          color: '#f87171',
-                          fontWeight: '700'
-                        }}>
-                          ✗{data.absence}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-            </div>
-            
+                利用児童数
+              </div>
               <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '12px',
                 display: 'flex',
+                alignItems: 'center',
                 justifyContent: 'center',
-                gap: '2rem',
-                marginTop: '1.5rem',
-                fontSize: '0.875rem',
-                padding: '1rem',
-                background: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '12px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                background: 'rgba(78, 205, 196, 0.1)',
+                color: '#4ecdc4',
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div style={{
-                    width: '12px',
-                    height: '12px',
-                    background: 'linear-gradient(135deg, #4ade80, #22c55e)',
-                    borderRadius: '2px',
-                    boxShadow: '0 2px 4px rgba(74, 222, 128, 0.4)',
-                  }} />
-                  <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>出席数</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div style={{
-                    width: '12px',
-                    height: '12px',
-                    background: 'linear-gradient(135deg, #f87171, #ef4444)',
-                    borderRadius: '2px',
-                    boxShadow: '0 2px 4px rgba(248, 113, 113, 0.4)',
-                  }} />
-                  <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>欠席数</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div style={{
-                    width: '12px',
-                    height: '12px',
-                    background: 'linear-gradient(135deg, rgba(96, 165, 250, 0.4), rgba(96, 165, 250, 0.2))',
-                    borderRadius: '2px',
-                    boxShadow: '0 2px 4px rgba(96, 165, 250, 0.4)',
-                  }} />
-                  <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>収益トレンド</span>
-                </div>
+                👥
               </div>
             </div>
+            <div style={{
+              fontSize: '2.5rem',
+              fontWeight: '700',
+              marginBottom: '0.5rem',
+              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>
+              {kpis.totalAttendance}人
+            </div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              fontSize: '0.9rem',
+              fontWeight: '600',
+              color: '#10b981',
+            }}>
+              ↗️ +{kpis.totalAbsence}人 前日比
+            </div>
+            <div style={{
+              height: '60px',
+              marginTop: '1rem',
+              background: 'linear-gradient(90deg, rgba(78, 205, 196, 0.1), rgba(68, 160, 141, 0.1))',
+              borderRadius: '8px',
+              position: 'relative',
+              overflow: 'hidden',
+            }}>
+              <div style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                height: '70%',
+                width: '100%',
+                background: 'linear-gradient(90deg, #4ecdc4, #44a08d)',
+                opacity: 0.3,
+              }} />
+            </div>
+          </div>
 
-            {/* アラート・通知 */}
-            <div className="chart-container glass-enhanced">
-              <h3 className="glass-title" style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>
-                🔔 アラート・通知
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.95)',
+            padding: '2rem',
+            borderRadius: '20px',
+            backdropFilter: 'blur(20px)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            position: 'relative',
+            overflow: 'hidden',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            borderTop: '4px solid #ff6b6b',
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '1rem',
+            }}>
+              <div style={{
+                fontSize: '0.9rem',
+                color: '#666',
+                fontWeight: '600',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}>
+                平均稼働率
+              </div>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'rgba(255, 107, 107, 0.1)',
+                color: '#ff6b6b',
+              }}>
+                📊
+              </div>
+            </div>
+            <div style={{
+              fontSize: '2.5rem',
+              fontWeight: '700',
+              marginBottom: '0.5rem',
+              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>
+              {kpis.attendanceRate.toFixed(1)}%
+            </div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              fontSize: '0.9rem',
+              fontWeight: '600',
+              color: '#10b981',
+            }}>
+              ↗️ +2.1% 前月比
+            </div>
+            <div style={{
+              height: '60px',
+              marginTop: '1rem',
+              background: 'linear-gradient(90deg, rgba(255, 107, 107, 0.1), rgba(238, 90, 111, 0.1))',
+              borderRadius: '8px',
+              position: 'relative',
+              overflow: 'hidden',
+            }}>
+              <div style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                height: '80%',
+                width: '100%',
+                background: 'linear-gradient(90deg, #ff6b6b, #ee5a6f)',
+                opacity: 0.3,
+              }} />
+            </div>
+          </div>
+
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.95)',
+            padding: '2rem',
+            borderRadius: '20px',
+            backdropFilter: 'blur(20px)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            position: 'relative',
+            overflow: 'hidden',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            borderTop: '4px solid #feca57',
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '1rem',
+            }}>
+              <div style={{
+                fontSize: '0.9rem',
+                color: '#666',
+                fontWeight: '600',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}>
+                加算取得率
+              </div>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'rgba(254, 202, 87, 0.1)',
+                color: '#feca57',
+              }}>
+                ⭐
+              </div>
+            </div>
+            <div style={{
+              fontSize: '2.5rem',
+              fontWeight: '700',
+              marginBottom: '0.5rem',
+              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>
+              91.2%
+            </div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              fontSize: '0.9rem',
+              fontWeight: '600',
+              color: '#ef4444',
+            }}>
+              ↘️ -0.8% 前日比
+            </div>
+            <div style={{
+              height: '60px',
+              marginTop: '1rem',
+              background: 'linear-gradient(90deg, rgba(254, 202, 87, 0.1), rgba(255, 159, 243, 0.1))',
+              borderRadius: '8px',
+              position: 'relative',
+              overflow: 'hidden',
+            }}>
+              <div style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                height: '90%',
+                width: '100%',
+                background: 'linear-gradient(90deg, #feca57, #ff9ff3)',
+                opacity: 0.3,
+              }} />
+            </div>
+          </div>
+        </div>
+
+        {/* チャートセクション */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '2fr 1fr',
+          gap: '2rem',
+          marginBottom: '2rem',
+        }}>
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.95)',
+            borderRadius: '20px',
+            padding: '2rem',
+            backdropFilter: 'blur(20px)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            position: 'relative',
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '2rem',
+            }}>
+              <h3 style={{
+                fontSize: '1.5rem',
+                fontWeight: '700',
+                color: '#1a1a1a',
+              }}>
+                売上推移
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {kpis.attendanceRate < 80 && (
-                  <div className="alert-card warning">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <span style={{ fontSize: '1.5rem' }}>⚠️</span>
-                      <div>
-                        <div style={{ fontWeight: '600', color: 'rgba(255, 255, 255, 0.95)' }}>出席率が低下しています</div>
-                        <div style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>
-                          現在の出席率: {kpis.attendanceRate.toFixed(1)}% (目標: 80%以上)
-                        </div>
-                      </div>
-                    </div>
+              <div style={{
+                display: 'flex',
+                gap: '0.5rem',
+              }}>
+                <button style={{
+                  padding: '0.5rem 1rem',
+                  border: '1px solid rgba(102, 126, 234, 0.3)',
+                  background: selectedPeriod === 'week' ? '#667eea' : 'transparent',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  fontWeight: '600',
+                  color: selectedPeriod === 'week' ? 'white' : '#667eea',
+                  transition: 'all 0.3s ease',
+                }} onClick={() => setSelectedPeriod('week')}>
+                  7日間
+                </button>
+                <button style={{
+                  padding: '0.5rem 1rem',
+                  border: '1px solid rgba(102, 126, 234, 0.3)',
+                  background: selectedPeriod === 'month' ? '#667eea' : 'transparent',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  fontWeight: '600',
+                  color: selectedPeriod === 'month' ? 'white' : '#667eea',
+                  transition: 'all 0.3s ease',
+                }} onClick={() => setSelectedPeriod('month')}>
+                  30日間
+                </button>
+                <button style={{
+                  padding: '0.5rem 1rem',
+                  border: '1px solid rgba(102, 126, 234, 0.3)',
+                  background: 'transparent',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  fontWeight: '600',
+                  color: '#667eea',
+                  transition: 'all 0.3s ease',
+                }}>
+                  3ヶ月
+                </button>
+              </div>
+            </div>
+            <div style={{
+              height: '300px',
+              background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05))',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              overflow: 'hidden',
+            }}>
+              <svg width="100%" height="100%" viewBox="0 0 400 200">
+                <defs>
+                  <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style={{stopColor: '#667eea', stopOpacity: 0.8}} />
+                    <stop offset="100%" style={{stopColor: '#667eea', stopOpacity: 0.1}} />
+                  </linearGradient>
+                </defs>
+                <path d="M0,150 L50,120 L100,100 L150,80 L200,70 L250,85 L300,65 L350,50 L400,45" 
+                      stroke="#667eea" strokeWidth="3" fill="none"/>
+                <path d="M0,150 L50,120 L100,100 L150,80 L200,70 L250,85 L300,65 L350,50 L400,45 L400,200 L0,200 Z" 
+                      fill="url(#gradient)"/>
+              </svg>
+            </div>
+          </div>
+
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.95)',
+            borderRadius: '20px',
+            padding: '2rem',
+            backdropFilter: 'blur(20px)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            position: 'relative',
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '2rem',
+            }}>
+              <h3 style={{
+                fontSize: '1.5rem',
+                fontWeight: '700',
+                color: '#1a1a1a',
+              }}>
+                事業所稼働状況
+              </h3>
+            </div>
+            <div style={{
+              height: '300px',
+              background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05))',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              overflow: 'hidden',
+            }}>
+              <div style={{
+                width: '200px',
+                height: '200px',
+                borderRadius: '50%',
+                background: 'conic-gradient(#667eea 0deg 140deg, #4ecdc4 140deg 220deg, #ff6b6b 220deg 300deg, #f0f0f0 300deg 360deg)',
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto',
+              }}>
+                <div style={{
+                  width: '120px',
+                  height: '120px',
+                  background: 'white',
+                  borderRadius: '50%',
+                  position: 'absolute',
+                }} />
+                <div style={{
+                  position: 'relative',
+                  zIndex: 1,
+                  textAlign: 'center',
+                }}>
+                  <div style={{
+                    fontSize: '2rem',
+                    fontWeight: '700',
+                    color: '#667eea',
+                  }}>
+                    {kpis.attendanceRate.toFixed(1)}%
                   </div>
-                )}
-                
-                {kpis.averageAttendancePerDay < 2 && (
-                  <div className="alert-card error">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <span style={{ fontSize: '1.5rem' }}>🚨</span>
-                      <div>
-                        <div style={{ fontWeight: '600', color: 'rgba(255, 255, 255, 0.95)' }}>稼働率が非常に低いです</div>
-                        <div style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>
-                          日平均出席数: {kpis.averageAttendancePerDay.toFixed(1)}人
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {kpis.attendanceRate >= 90 && (
-                  <div className="alert-card success">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <span style={{ fontSize: '1.5rem' }}>🎉</span>
-                      <div>
-                        <div style={{ fontWeight: '600', color: 'rgba(255, 255, 255, 0.95)' }}>素晴らしい出席率です！</div>
-                        <div style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>
-                          出席率: {kpis.attendanceRate.toFixed(1)}% - 目標を大幅に上回っています
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {kpis.attendanceRate >= 80 && kpis.attendanceRate < 90 && kpis.averageAttendancePerDay >= 2 && (
-                  <div className="alert-card info">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <span style={{ fontSize: '1.5rem' }}>✅</span>
-                      <div>
-                        <div style={{ fontWeight: '600', color: 'rgba(255, 255, 255, 0.95)' }}>運営状況は良好です</div>
-                        <div style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>
-                          全ての指標が目標値を満たしています
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {/* 収益情報カード */}
-                <div className="alert-card info">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                    <span style={{ fontSize: '1.2rem' }}>💡</span>
-                    <div style={{ fontWeight: '600', color: 'rgba(255, 255, 255, 0.95)' }}>今月の予測</div>
-                  </div>
-                  <div style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '0.25rem' }}>
-                    月末予測売上: ¥{Math.round((kpis.totalRevenue / kpis.totalDays) * 22).toLocaleString()}
-                  </div>
-                  <div style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)' }}>
-                    予測出席数: {Math.round((kpis.totalAttendance / kpis.totalDays) * 22)}人
+                  <div style={{
+                    fontSize: '0.8rem',
+                    color: '#666',
+                    marginTop: '0.25rem',
+                  }}>
+                    平均稼働率
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+
+        {/* データテーブル */}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          borderRadius: '20px',
+          padding: '2rem',
+          backdropFilter: 'blur(20px)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          overflow: 'hidden',
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '1.5rem',
+          }}>
+            <h3 style={{
+              fontSize: '1.5rem',
+              fontWeight: '700',
+              color: '#1a1a1a',
+            }}>
+              事業所別実績
+            </h3>
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+            }}>
+              <thead>
+                <tr>
+                  <th style={{
+                    textAlign: 'left',
+                    padding: '1rem',
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+                    background: 'rgba(102, 126, 234, 0.1)',
+                    color: '#667eea',
+                    fontWeight: '600',
+                    fontSize: '0.9rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}>
+                    事業所名
+                  </th>
+                  <th style={{
+                    textAlign: 'left',
+                    padding: '1rem',
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+                    background: 'rgba(102, 126, 234, 0.1)',
+                    color: '#667eea',
+                    fontWeight: '600',
+                    fontSize: '0.9rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}>
+                    業態
+                  </th>
+                  <th style={{
+                    textAlign: 'left',
+                    padding: '1rem',
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+                    background: 'rgba(102, 126, 234, 0.1)',
+                    color: '#667eea',
+                    fontWeight: '600',
+                    fontSize: '0.9rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}>
+                    本日利用者
+                  </th>
+                  <th style={{
+                    textAlign: 'left',
+                    padding: '1rem',
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+                    background: 'rgba(102, 126, 234, 0.1)',
+                    color: '#667eea',
+                    fontWeight: '600',
+                    fontSize: '0.9rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}>
+                    稼働率
+                  </th>
+                  <th style={{
+                    textAlign: 'left',
+                    padding: '1rem',
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+                    background: 'rgba(102, 126, 234, 0.1)',
+                    color: '#667eea',
+                    fontWeight: '600',
+                    fontSize: '0.9rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}>
+                    本日売上
+                  </th>
+                  <th style={{
+                    textAlign: 'left',
+                    padding: '1rem',
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+                    background: 'rgba(102, 126, 234, 0.1)',
+                    color: '#667eea',
+                    fontWeight: '600',
+                    fontSize: '0.9rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}>
+                    ステータス
+                  </th>
+                  <th style={{
+                    textAlign: 'left',
+                    padding: '1rem',
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+                    background: 'rgba(102, 126, 234, 0.1)',
+                    color: '#667eea',
+                    fontWeight: '600',
+                    fontSize: '0.9rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}>
+                    詳細
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style={{ transition: 'all 0.3s ease' }}>
+                  <td style={{
+                    textAlign: 'left',
+                    padding: '1rem',
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+                  }}>
+                    <strong>さくら児童発達支援センター</strong>
+                  </td>
+                  <td style={{
+                    textAlign: 'left',
+                    padding: '1rem',
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+                  }}>
+                    児童発達支援
+                  </td>
+                  <td style={{
+                    textAlign: 'left',
+                    padding: '1rem',
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+                  }}>
+                    {Math.floor(kpis.totalAttendance * 0.4)}人
+                  </td>
+                  <td style={{
+                    textAlign: 'left',
+                    padding: '1rem',
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+                  }}>
+                    93.3%
+                  </td>
+                  <td style={{
+                    textAlign: 'left',
+                    padding: '1rem',
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+                  }}>
+                    ¥{Math.floor(kpis.totalRevenue * 0.3).toLocaleString()}
+                  </td>
+                  <td style={{
+                    textAlign: 'left',
+                    padding: '1rem',
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+                  }}>
+                    <span style={{
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '20px',
+                      fontSize: '0.8rem',
+                      fontWeight: '600',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      background: 'rgba(16, 185, 129, 0.1)',
+                      color: '#10b981',
+                    }}>
+                      稼働中
+                    </span>
+                  </td>
+                  <td style={{
+                    textAlign: 'left',
+                    padding: '1rem',
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+                  }}>
+                    <button style={{
+                      padding: '0.5rem 1rem',
+                      fontSize: '0.8rem',
+                      background: 'rgba(255, 255, 255, 0.9)',
+                      color: '#667eea',
+                      border: '1px solid rgba(102, 126, 234, 0.3)',
+                      borderRadius: '12px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    }}>
+                      詳細
+                    </button>
+                  </td>
+                </tr>
+                <tr style={{ transition: 'all 0.3s ease' }}>
+                  <td style={{
+                    textAlign: 'left',
+                    padding: '1rem',
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+                  }}>
+                    <strong>ひまわり放課後デイ</strong>
+                  </td>
+                  <td style={{
+                    textAlign: 'left',
+                    padding: '1rem',
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+                  }}>
+                    放課後等デイサービス
+                  </td>
+                  <td style={{
+                    textAlign: 'left',
+                    padding: '1rem',
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+                  }}>
+                    {Math.floor(kpis.totalAttendance * 0.6)}人
+                  </td>
+                  <td style={{
+                    textAlign: 'left',
+                    padding: '1rem',
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+                  }}>
+                    87.5%
+                  </td>
+                  <td style={{
+                    textAlign: 'left',
+                    padding: '1rem',
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+                  }}>
+                    ¥{Math.floor(kpis.totalRevenue * 0.7).toLocaleString()}
+                  </td>
+                  <td style={{
+                    textAlign: 'left',
+                    padding: '1rem',
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+                  }}>
+                    <span style={{
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '20px',
+                      fontSize: '0.8rem',
+                      fontWeight: '600',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      background: 'rgba(16, 185, 129, 0.1)',
+                      color: '#10b981',
+                    }}>
+                      稼働中
+                    </span>
+                  </td>
+                  <td style={{
+                    textAlign: 'left',
+                    padding: '1rem',
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+                  }}>
+                    <button style={{
+                      padding: '0.5rem 1rem',
+                      fontSize: '0.8rem',
+                      background: 'rgba(255, 255, 255, 0.9)',
+                      color: '#667eea',
+                      border: '1px solid rgba(102, 126, 234, 0.3)',
+                      borderRadius: '12px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    }}>
+                      詳細
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
     </ModernLayout>
   );
 };
