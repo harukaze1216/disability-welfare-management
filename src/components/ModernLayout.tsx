@@ -24,8 +24,8 @@ export const ModernLayout: React.FC<ModernLayoutProps> = ({ children }) => {
     { icon: '📊', label: 'ダッシュボード', path: '/dashboard' },
     { icon: '📝', label: '日報入力', path: '/daily-reports' },
     { icon: '🏢', label: '事業所管理', path: '/organizations' },
-    { icon: '👥', label: 'ユーザー管理', path: '/users' },
-    { icon: '👶', label: '児童管理', path: '/children' },
+    { icon: '👤', label: 'ユーザー管理', path: '/users' },
+    { icon: '👥', label: '利用者管理', path: '/children' },
     { icon: '💰', label: '加算設定', path: '/addon-master' },
     { icon: '📈', label: 'レポート', path: '/reports' },
     { icon: '⚙️', label: '設定', path: '/settings' },
@@ -213,10 +213,17 @@ export const ModernLayout: React.FC<ModernLayoutProps> = ({ children }) => {
         {/* メインコンテンツ */}
         <main style={{
           flex: 1,
-          padding: '2rem',
+          padding: '2rem 3rem',
           background: 'rgba(255, 255, 255, 0.05)',
+          minHeight: '100vh',
+          overflowY: 'auto',
         }}>
-          {children}
+          <div style={{
+            maxWidth: '1600px',
+            margin: '0 auto',
+          }}>
+            {children}
+          </div>
         </main>
       </div>
     </div>

@@ -40,7 +40,7 @@ export const ChildrenManagement: React.FC = () => {
       
       handleCloseModal();
     } catch (error) {
-      console.error('児童の保存に失敗しました:', error);
+      console.error('利用者の保存に失敗しました:', error);
     }
   };
 
@@ -56,11 +56,11 @@ export const ChildrenManagement: React.FC = () => {
   };
 
   const handleDelete = async (childId: string) => {
-    if (window.confirm('この児童を削除してもよろしいですか？')) {
+    if (window.confirm('この利用者を削除してもよろしいですか？')) {
       try {
         await deleteData(childId);
       } catch (error) {
-        console.error('児童の削除に失敗しました:', error);
+        console.error('利用者の削除に失敗しました:', error);
       }
     }
   };
@@ -128,13 +128,13 @@ export const ChildrenManagement: React.FC = () => {
               fontWeight: '800',
               marginBottom: 'var(--space-2)',
             }}>
-              在籍児童管理
+              利用者管理
             </h1>
             <p style={{
               color: 'var(--neutral-600)',
               fontSize: 'var(--font-size-lg)',
             }}>
-              {userData?.role === 'HQ' ? '全事業所の' : '所属事業所の'}在籍児童の管理を行います
+              {userData?.role === 'HQ' ? '全事業所の' : '所属事業所の'}利用者の管理を行います
             </p>
           </div>
 
@@ -148,7 +148,7 @@ export const ChildrenManagement: React.FC = () => {
             }}
           >
             <span style={{ fontSize: '1.25rem' }}>👶</span>
-            新規児童追加
+            新規利用者追加
           </button>
         </div>
 
@@ -184,7 +184,7 @@ export const ChildrenManagement: React.FC = () => {
                 color: 'var(--neutral-600)',
                 fontSize: 'var(--font-size-sm)',
               }}>
-                在籍児童数
+                利用者数
               </p>
             </div>
           </div>
@@ -202,7 +202,7 @@ export const ChildrenManagement: React.FC = () => {
               color: 'var(--neutral-800)',
               marginBottom: 'var(--space-2)',
             }}>
-              在籍児童一覧
+              利用者一覧
             </h2>
             <div style={{
               width: '60px',
@@ -218,145 +218,231 @@ export const ChildrenManagement: React.FC = () => {
               padding: 'var(--space-12)',
               color: 'var(--neutral-500)',
             }}>
-              <div style={{ fontSize: '4rem', marginBottom: 'var(--space-4)' }}>👶</div>
-              <h3 style={{ marginBottom: 'var(--space-2)' }}>児童が登録されていません</h3>
-              <p>「新規児童追加」ボタンから最初の児童を追加してください。</p>
+              <div style={{ fontSize: '4rem', marginBottom: 'var(--space-4)' }}>👥</div>
+              <h3 style={{ marginBottom: 'var(--space-2)' }}>利用者が登録されていません</h3>
+              <p>「新規利用者追加」ボタンから最初の利用者を追加してください。</p>
             </div>
           ) : (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-              gap: 'var(--space-6)',
-            }}>
-              {filteredChildren.map((child) => (
-                <div key={child.childId} className="card fade-in" style={{
-                  padding: 'var(--space-5)',
-                  borderRadius: 'var(--radius-xl)',
-                  border: '2px solid var(--success-200)',
-                  transition: 'all var(--transition-normal)',
-                }}>
-                  {/* Child Header */}
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 'var(--space-3)',
-                    marginBottom: 'var(--space-4)',
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                fontSize: 'var(--font-size-sm)',
+              }}>
+                <thead>
+                  <tr style={{
+                    background: 'rgba(102, 126, 234, 0.1)',
+                    borderBottom: '2px solid rgba(102, 126, 234, 0.2)',
                   }}>
-                    <div style={{
-                      width: '50px',
-                      height: '50px',
-                      background: 'linear-gradient(135deg, var(--success-200), var(--success-100))',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '1.5rem',
+                    <th style={{
+                      padding: 'var(--space-4)',
+                      textAlign: 'left',
+                      fontWeight: '600',
+                      color: '#667eea',
+                      fontSize: 'var(--font-size-sm)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
                     }}>
-                      👶
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <h3 style={{
-                        fontSize: 'var(--font-size-lg)',
-                        fontWeight: '700',
-                        color: 'var(--neutral-900)',
-                        marginBottom: 'var(--space-1)',
+                      利用者名
+                    </th>
+                    {userData?.role === 'HQ' && (
+                      <th style={{
+                        padding: 'var(--space-4)',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: '#667eea',
+                        fontSize: 'var(--font-size-sm)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
                       }}>
-                        {child.name}
-                      </h3>
+                        事業所
+                      </th>
+                    )}
+                    <th style={{
+                      padding: 'var(--space-4)',
+                      textAlign: 'center',
+                      fontWeight: '600',
+                      color: '#667eea',
+                      fontSize: 'var(--font-size-sm)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}>
+                      行き送迎
+                    </th>
+                    <th style={{
+                      padding: 'var(--space-4)',
+                      textAlign: 'center',
+                      fontWeight: '600',
+                      color: '#667eea',
+                      fontSize: 'var(--font-size-sm)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}>
+                      帰り送迎
+                    </th>
+                    <th style={{
+                      padding: 'var(--space-4)',
+                      textAlign: 'center',
+                      fontWeight: '600',
+                      color: '#667eea',
+                      fontSize: 'var(--font-size-sm)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      width: '200px',
+                    }}>
+                      操作
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredChildren.map((child, index) => (
+                    <tr key={child.childId} style={{
+                      borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+                      transition: 'all 0.3s ease',
+                      background: index % 2 === 0 ? 'transparent' : 'rgba(102, 126, 234, 0.02)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(102, 126, 234, 0.05)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = index % 2 === 0 ? 'transparent' : 'rgba(102, 126, 234, 0.02)';
+                    }}>
+                      <td style={{
+                        padding: 'var(--space-4)',
+                        fontWeight: '600',
+                        color: 'var(--neutral-900)',
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                          <div style={{
+                            width: '40px',
+                            height: '40px',
+                            background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(102, 126, 234, 0.05))',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '1.2rem',
+                          }}>
+                            👥
+                          </div>
+                          {child.name}
+                        </div>
+                      </td>
                       {userData?.role === 'HQ' && (
-                        <p style={{
-                          fontSize: 'var(--font-size-sm)',
+                        <td style={{
+                          padding: 'var(--space-4)',
                           color: 'var(--neutral-600)',
                         }}>
                           {getOrganizationName(child.orgId)}
-                        </p>
+                        </td>
                       )}
-                    </div>
-                  </div>
-
-                  {/* Transport Info */}
-                  <div style={{ marginBottom: 'var(--space-5)' }}>
-                    <h4 style={{
-                      fontSize: 'var(--font-size-sm)',
-                      fontWeight: '600',
-                      color: 'var(--neutral-700)',
-                      marginBottom: 'var(--space-3)',
-                    }}>
-                      送迎設定
-                    </h4>
-                    <div style={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: 'var(--space-3)',
-                    }}>
-                      <div style={{
-                        padding: 'var(--space-3)',
-                        background: child.defaultPickup ? 'var(--success-50)' : 'var(--neutral-50)',
-                        borderRadius: 'var(--radius-lg)',
+                      <td style={{
+                        padding: 'var(--space-4)',
                         textAlign: 'center',
-                        border: `2px solid ${child.defaultPickup ? 'var(--success-200)' : 'var(--neutral-200)'}`,
                       }}>
-                        <div style={{ fontSize: '1.25rem', marginBottom: 'var(--space-1)' }}>
-                          {child.defaultPickup ? '🚐' : '🚫'}
-                        </div>
                         <div style={{
-                          fontSize: 'var(--font-size-xs)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 'var(--space-2)',
+                          padding: 'var(--space-2) var(--space-3)',
+                          borderRadius: 'var(--radius-lg)',
+                          background: child.defaultPickup ? 'rgba(34, 197, 94, 0.1)' : 'rgba(107, 114, 128, 0.1)',
+                          color: child.defaultPickup ? '#16a34a' : '#6b7280',
+                          fontSize: 'var(--font-size-sm)',
                           fontWeight: '600',
-                          color: child.defaultPickup ? 'var(--success-700)' : 'var(--neutral-600)',
                         }}>
-                          行き送迎
+                          <span style={{ fontSize: '1rem' }}>
+                            {child.defaultPickup ? '🚐' : '🚫'}
+                          </span>
+                          {child.defaultPickup ? '有効' : '無効'}
                         </div>
-                      </div>
-                      <div style={{
-                        padding: 'var(--space-3)',
-                        background: child.defaultDrop ? 'var(--success-50)' : 'var(--neutral-50)',
-                        borderRadius: 'var(--radius-lg)',
+                      </td>
+                      <td style={{
+                        padding: 'var(--space-4)',
                         textAlign: 'center',
-                        border: `2px solid ${child.defaultDrop ? 'var(--success-200)' : 'var(--neutral-200)'}`,
                       }}>
-                        <div style={{ fontSize: '1.25rem', marginBottom: 'var(--space-1)' }}>
-                          {child.defaultDrop ? '🏠' : '🚫'}
-                        </div>
                         <div style={{
-                          fontSize: 'var(--font-size-xs)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 'var(--space-2)',
+                          padding: 'var(--space-2) var(--space-3)',
+                          borderRadius: 'var(--radius-lg)',
+                          background: child.defaultDrop ? 'rgba(34, 197, 94, 0.1)' : 'rgba(107, 114, 128, 0.1)',
+                          color: child.defaultDrop ? '#16a34a' : '#6b7280',
+                          fontSize: 'var(--font-size-sm)',
                           fontWeight: '600',
-                          color: child.defaultDrop ? 'var(--success-700)' : 'var(--neutral-600)',
                         }}>
-                          帰り送迎
+                          <span style={{ fontSize: '1rem' }}>
+                            {child.defaultDrop ? '🏠' : '🚫'}
+                          </span>
+                          {child.defaultDrop ? '有効' : '無効'}
                         </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
-                    <button
-                      onClick={() => handleEdit(child)}
-                      className="btn"
-                      style={{
-                        padding: 'var(--space-3) var(--space-4)',
-                        background: 'linear-gradient(135deg, var(--warning-500), var(--warning-400))',
-                        color: 'white',
-                        fontSize: 'var(--font-size-sm)',
-                        flex: 1,
-                      }}
-                    >
-                      ✏️ 編集
-                    </button>
-                    <button
-                      onClick={() => handleDelete(child.childId)}
-                      className="btn btn-danger"
-                      style={{
-                        padding: 'var(--space-3) var(--space-4)',
-                        fontSize: 'var(--font-size-sm)',
-                        flex: 1,
-                      }}
-                    >
-                      🗑️ 削除
-                    </button>
-                  </div>
-                </div>
-              ))}
+                      </td>
+                      <td style={{
+                        padding: 'var(--space-4)',
+                        textAlign: 'center',
+                      }}>
+                        <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'center' }}>
+                          <button
+                            onClick={() => handleEdit(child)}
+                            style={{
+                              padding: 'var(--space-2) var(--space-3)',
+                              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: 'var(--radius-lg)',
+                              fontSize: 'var(--font-size-sm)',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              transition: 'all 0.3s ease',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 'var(--space-1)',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = 'translateY(-1px)';
+                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = 'translateY(0)';
+                              e.currentTarget.style.boxShadow = 'none';
+                            }}
+                          >
+                            ✏️ 編集
+                          </button>
+                          <button
+                            onClick={() => handleDelete(child.childId)}
+                            style={{
+                              padding: 'var(--space-2) var(--space-3)',
+                              background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: 'var(--radius-lg)',
+                              fontSize: 'var(--font-size-sm)',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              transition: 'all 0.3s ease',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 'var(--space-1)',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = 'translateY(-1px)';
+                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.4)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = 'translateY(0)';
+                              e.currentTarget.style.boxShadow = 'none';
+                            }}
+                          >
+                            🗑️ 削除
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
@@ -392,7 +478,7 @@ export const ChildrenManagement: React.FC = () => {
                   color: 'var(--neutral-900)',
                   marginBottom: 'var(--space-2)',
                 }}>
-                  {editingChild ? '児童情報編集' : '新規児童追加'}
+                  {editingChild ? '利用者情報編集' : '新規利用者追加'}
                 </h2>
                 <div style={{
                   width: '40px',
@@ -411,7 +497,7 @@ export const ChildrenManagement: React.FC = () => {
                     fontWeight: '600',
                     color: 'var(--neutral-700)',
                   }}>
-                    児童名
+                    利用者名
                   </label>
                   <input
                     type="text"

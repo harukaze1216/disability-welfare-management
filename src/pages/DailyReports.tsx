@@ -50,26 +50,13 @@ export const DailyReports: React.FC = () => {
     }
   }, [selectedDate, currentReport, filteredChildren]);
 
-  const handleChildClick = (child: Child) => {
-    const existingReport = reportData.find(r => r.childId === child.childId);
-    setSelectedChild(child);
-    setChildReportData(existingReport || {
-      childId: child.childId,
-      arrival: '',
-      departure: '',
-      pickup: child.defaultPickup,
-      drop: child.defaultDrop,
-      addOns: []
-    });
-    setIsChildModalOpen(true);
-  };
-
-  const handleSaveChildReport = () => {
+  const updateChildReport = (childId: string, field: keyof ChildReport, value: any) => {
     setReportData(prev => {
-      const filtered = prev.filter(r => r.childId !== childReportData.childId);
-      return [...filtered, childReportData];
+      const existing = prev.find(r => r.childId === childId);
+      const updated = { ...existing, [field]: value } as ChildReport;
+      const filtered = prev.filter(r => r.childId !== childId);
+      return [...filtered, updated];
     });
-    setIsChildModalOpen(false);
   };
 
   const handleSaveReport = async () => {
@@ -151,7 +138,7 @@ export const DailyReports: React.FC = () => {
               color: 'var(--neutral-600)',
               fontSize: 'var(--font-size-lg)',
             }}>
-              児童の出欠・到着退室時刻・加算の管理を行います
+              利用者の出欠・到着退室時刻・加算の管理を行います
             </p>
           </div>
 
@@ -269,7 +256,7 @@ export const DailyReports: React.FC = () => {
               color: 'var(--neutral-800)',
               marginBottom: 'var(--space-2)',
             }}>
-              児童出欠管理
+              利用者出欠管理
             </h2>
             <div style={{
               width: '60px',
@@ -285,213 +272,277 @@ export const DailyReports: React.FC = () => {
               padding: 'var(--space-12)',
               color: 'var(--neutral-500)',
             }}>
-              <div style={{ fontSize: '4rem', marginBottom: 'var(--space-4)' }}>👶</div>
-              <h3 style={{ marginBottom: 'var(--space-2)' }}>在籍児童がいません</h3>
-              <p>先に児童管理から児童を登録してください。</p>
+              <div style={{ fontSize: '4rem', marginBottom: 'var(--space-4)' }}>👥</div>
+              <h3 style={{ marginBottom: 'var(--space-2)' }}>登録済み利用者がいません</h3>
+              <p>先に利用者管理から利用者を登録してください。</p>
             </div>
           ) : (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-              gap: 'var(--space-4)',
-            }}>
-              {filteredChildren.map((child) => {
-                const childReport = getChildReport(child.childId);
-                const supportTime = calculateSupportTime(childReport?.arrival, childReport?.departure);
-                const hasAttendance = !!(childReport?.arrival || childReport?.departure);
-                
-                return (
-                  <div 
-                    key={child.childId} 
-                    className="card fade-in" 
-                    style={{
-                      padding: 'var(--space-5)',
-                      borderRadius: 'var(--radius-xl)',
-                      border: hasAttendance 
-                        ? '2px solid var(--success-300)'
-                        : '2px solid var(--neutral-200)',
-                      cursor: 'pointer',
-                      transition: 'all var(--transition-normal)',
-                      background: hasAttendance 
-                        ? 'linear-gradient(135deg, var(--success-50), white)'
-                        : 'white',
-                    }}
-                    onClick={() => handleChildClick(child)}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = 'var(--shadow-xl)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
-                    }}
-                  >
-                    {/* Child Header */}
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 'var(--space-3)',
-                      marginBottom: 'var(--space-4)',
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                fontSize: 'var(--font-size-sm)',
+              }}>
+                <thead>
+                  <tr style={{
+                    background: 'rgba(102, 126, 234, 0.1)',
+                    borderBottom: '2px solid rgba(102, 126, 234, 0.2)',
+                  }}>
+                    <th style={{
+                      padding: 'var(--space-4)',
+                      textAlign: 'left',
+                      fontWeight: '600',
+                      color: '#667eea',
+                      fontSize: 'var(--font-size-sm)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      width: '200px',
                     }}>
-                      <div style={{
-                        width: '50px',
-                        height: '50px',
-                        background: hasAttendance
-                          ? 'linear-gradient(135deg, var(--success-400), var(--success-300))'
-                          : 'linear-gradient(135deg, var(--neutral-300), var(--neutral-200))',
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '1.5rem',
+                      利用者名
+                    </th>
+                    <th style={{
+                      padding: 'var(--space-4)',
+                      textAlign: 'center',
+                      fontWeight: '600',
+                      color: '#667eea',
+                      fontSize: 'var(--font-size-sm)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      width: '120px',
+                    }}>
+                      到着時刻
+                    </th>
+                    <th style={{
+                      padding: 'var(--space-4)',
+                      textAlign: 'center',
+                      fontWeight: '600',
+                      color: '#667eea',
+                      fontSize: 'var(--font-size-sm)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      width: '120px',
+                    }}>
+                      退室時刻
+                    </th>
+                    <th style={{
+                      padding: 'var(--space-4)',
+                      textAlign: 'center',
+                      fontWeight: '600',
+                      color: '#667eea',
+                      fontSize: 'var(--font-size-sm)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      width: '100px',
+                    }}>
+                      支援時間
+                    </th>
+                    <th style={{
+                      padding: 'var(--space-4)',
+                      textAlign: 'center',
+                      fontWeight: '600',
+                      color: '#667eea',
+                      fontSize: 'var(--font-size-sm)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      width: '80px',
+                    }}>
+                      行き送迎
+                    </th>
+                    <th style={{
+                      padding: 'var(--space-4)',
+                      textAlign: 'center',
+                      fontWeight: '600',
+                      color: '#667eea',
+                      fontSize: 'var(--font-size-sm)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      width: '80px',
+                    }}>
+                      帰り送迎
+                    </th>
+                    <th style={{
+                      padding: 'var(--space-4)',
+                      textAlign: 'center',
+                      fontWeight: '600',
+                      color: '#667eea',
+                      fontSize: 'var(--font-size-sm)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}>
+                      加算
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredChildren.map((child, index) => {
+                    const childReport = getChildReport(child.childId) || {
+                      childId: child.childId,
+                      arrival: '',
+                      departure: '',
+                      pickup: child.defaultPickup,
+                      drop: child.defaultDrop,
+                      addOns: []
+                    };
+                    const supportTime = calculateSupportTime(childReport.arrival, childReport.departure);
+                    const hasAttendance = !!(childReport.arrival || childReport.departure);
+                    
+                    return (
+                      <tr key={child.childId} style={{
+                        borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+                        transition: 'all 0.3s ease',
+                        background: hasAttendance 
+                          ? (index % 2 === 0 ? 'rgba(34, 197, 94, 0.05)' : 'rgba(34, 197, 94, 0.1)')
+                          : (index % 2 === 0 ? 'transparent' : 'rgba(102, 126, 234, 0.02)'),
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = hasAttendance
+                          ? 'rgba(34, 197, 94, 0.15)'
+                          : 'rgba(102, 126, 234, 0.05)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = hasAttendance 
+                          ? (index % 2 === 0 ? 'rgba(34, 197, 94, 0.05)' : 'rgba(34, 197, 94, 0.1)')
+                          : (index % 2 === 0 ? 'transparent' : 'rgba(102, 126, 234, 0.02)');
                       }}>
-                        {hasAttendance ? '✅' : '👶'}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <h3 style={{
-                          fontSize: 'var(--font-size-lg)',
-                          fontWeight: '700',
+                        <td style={{
+                          padding: 'var(--space-4)',
+                          fontWeight: '600',
                           color: 'var(--neutral-900)',
-                          marginBottom: 'var(--space-1)',
                         }}>
-                          {child.name}
-                        </h3>
-                        <div style={{
-                          fontSize: 'var(--font-size-xs)',
-                          color: hasAttendance ? 'var(--success-600)' : 'var(--neutral-500)',
-                          fontWeight: '600',
-                        }}>
-                          {hasAttendance ? '出席' : '未入力'}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Time Display */}
-                    {hasAttendance && (
-                      <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: '1fr 1fr',
-                        gap: 'var(--space-3)',
-                        marginBottom: 'var(--space-4)',
-                      }}>
-                        <div style={{
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                            <div style={{
+                              width: '40px',
+                              height: '40px',
+                              background: hasAttendance
+                                ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1))'
+                                : 'linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(102, 126, 234, 0.05))',
+                              borderRadius: '50%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '1.2rem',
+                            }}>
+                              {hasAttendance ? '✅' : '👥'}
+                            </div>
+                            {child.name}
+                          </div>
+                        </td>
+                        <td style={{
                           padding: 'var(--space-2)',
-                          background: 'var(--primary-50)',
-                          borderRadius: 'var(--radius-md)',
                           textAlign: 'center',
                         }}>
-                          <div style={{
-                            fontSize: 'var(--font-size-xs)',
-                            color: 'var(--primary-600)',
-                            fontWeight: '600',
-                            marginBottom: 'var(--space-1)',
-                          }}>
-                            到着
-                          </div>
-                          <div style={{
-                            fontSize: 'var(--font-size-sm)',
-                            fontWeight: '700',
-                            color: 'var(--primary-700)',
-                          }}>
-                            {childReport?.arrival || '--:--'}
-                          </div>
-                        </div>
-                        <div style={{
+                          <input
+                            type="time"
+                            value={childReport.arrival}
+                            onChange={(e) => updateChildReport(child.childId, 'arrival', e.target.value)}
+                            style={{
+                              padding: 'var(--space-2)',
+                              border: '1px solid rgba(102, 126, 234, 0.3)',
+                              borderRadius: 'var(--radius-md)',
+                              fontSize: 'var(--font-size-sm)',
+                              textAlign: 'center',
+                              width: '100px',
+                              background: 'white',
+                            }}
+                          />
+                        </td>
+                        <td style={{
                           padding: 'var(--space-2)',
-                          background: 'var(--warning-50)',
-                          borderRadius: 'var(--radius-md)',
                           textAlign: 'center',
                         }}>
-                          <div style={{
-                            fontSize: 'var(--font-size-xs)',
-                            color: 'var(--warning-600)',
-                            fontWeight: '600',
-                            marginBottom: 'var(--space-1)',
-                          }}>
-                            退室
-                          </div>
-                          <div style={{
-                            fontSize: 'var(--font-size-sm)',
-                            fontWeight: '700',
-                            color: 'var(--warning-700)',
-                          }}>
-                            {childReport?.departure || '--:--'}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Support Time */}
-                    {supportTime > 0 && (
-                      <div style={{
-                        padding: 'var(--space-3)',
-                        background: 'var(--success-100)',
-                        borderRadius: 'var(--radius-lg)',
-                        textAlign: 'center',
-                        marginBottom: 'var(--space-4)',
-                      }}>
-                        <div style={{
-                          fontSize: 'var(--font-size-lg)',
-                          fontWeight: '700',
-                          color: 'var(--success-700)',
-                        }}>
-                          {supportTime.toFixed(1)}時間
-                        </div>
-                        <div style={{
-                          fontSize: 'var(--font-size-xs)',
-                          color: 'var(--success-600)',
-                        }}>
-                          支援時間
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Transport Status */}
-                    <div style={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: 'var(--space-2)',
-                    }}>
-                      <div style={{
-                        padding: 'var(--space-2)',
-                        background: childReport?.pickup ? 'var(--primary-50)' : 'var(--neutral-50)',
-                        borderRadius: 'var(--radius-md)',
-                        textAlign: 'center',
-                        border: `1px solid ${childReport?.pickup ? 'var(--primary-200)' : 'var(--neutral-200)'}`,
-                      }}>
-                        <div style={{ fontSize: '1rem', marginBottom: 'var(--space-1)' }}>
-                          {childReport?.pickup ? '🚐' : '🚫'}
-                        </div>
-                        <div style={{
-                          fontSize: 'var(--font-size-xs)',
+                          <input
+                            type="time"
+                            value={childReport.departure}
+                            onChange={(e) => updateChildReport(child.childId, 'departure', e.target.value)}
+                            style={{
+                              padding: 'var(--space-2)',
+                              border: '1px solid rgba(102, 126, 234, 0.3)',
+                              borderRadius: 'var(--radius-md)',
+                              fontSize: 'var(--font-size-sm)',
+                              textAlign: 'center',
+                              width: '100px',
+                              background: 'white',
+                            }}
+                          />
+                        </td>
+                        <td style={{
+                          padding: 'var(--space-4)',
+                          textAlign: 'center',
                           fontWeight: '600',
-                          color: childReport?.pickup ? 'var(--primary-600)' : 'var(--neutral-500)',
+                          color: supportTime > 0 ? '#16a34a' : '#6b7280',
                         }}>
-                          行き
-                        </div>
-                      </div>
-                      <div style={{
-                        padding: 'var(--space-2)',
-                        background: childReport?.drop ? 'var(--primary-50)' : 'var(--neutral-50)',
-                        borderRadius: 'var(--radius-md)',
-                        textAlign: 'center',
-                        border: `1px solid ${childReport?.drop ? 'var(--primary-200)' : 'var(--neutral-200)'}`,
-                      }}>
-                        <div style={{ fontSize: '1rem', marginBottom: 'var(--space-1)' }}>
-                          {childReport?.drop ? '🏠' : '🚫'}
-                        </div>
-                        <div style={{
-                          fontSize: 'var(--font-size-xs)',
-                          fontWeight: '600',
-                          color: childReport?.drop ? 'var(--primary-600)' : 'var(--neutral-500)',
+                          {supportTime > 0 ? `${supportTime.toFixed(1)}h` : '-'}
+                        </td>
+                        <td style={{
+                          padding: 'var(--space-4)',
+                          textAlign: 'center',
                         }}>
-                          帰り
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+                          <input
+                            type="checkbox"
+                            checked={childReport.pickup}
+                            onChange={(e) => updateChildReport(child.childId, 'pickup', e.target.checked)}
+                            style={{
+                              width: '20px',
+                              height: '20px',
+                              accentColor: '#667eea',
+                              cursor: 'pointer',
+                            }}
+                          />
+                        </td>
+                        <td style={{
+                          padding: 'var(--space-4)',
+                          textAlign: 'center',
+                        }}>
+                          <input
+                            type="checkbox"
+                            checked={childReport.drop}
+                            onChange={(e) => updateChildReport(child.childId, 'drop', e.target.checked)}
+                            style={{
+                              width: '20px',
+                              height: '20px',
+                              accentColor: '#667eea',
+                              cursor: 'pointer',
+                            }}
+                          />
+                        </td>
+                        <td style={{
+                          padding: 'var(--space-4)',
+                          textAlign: 'center',
+                        }}>
+                          <button
+                            onClick={() => {
+                              setSelectedChild(child);
+                              setChildReportData(childReport);
+                              setIsChildModalOpen(true);
+                            }}
+                            style={{
+                              padding: 'var(--space-2) var(--space-3)',
+                              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: 'var(--radius-md)',
+                              fontSize: 'var(--font-size-xs)',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              transition: 'all 0.3s ease',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = 'translateY(-1px)';
+                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = 'translateY(0)';
+                              e.currentTarget.style.boxShadow = 'none';
+                            }}
+                          >
+                            加算設定
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
@@ -740,7 +791,10 @@ export const DailyReports: React.FC = () => {
                   キャンセル
                 </button>
                 <button
-                  onClick={handleSaveChildReport}
+                  onClick={() => {
+                    updateChildReport(childReportData.childId, 'addOns', childReportData.addOns);
+                    setIsChildModalOpen(false);
+                  }}
                   className="btn btn-primary"
                 >
                   保存
