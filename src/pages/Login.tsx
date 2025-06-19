@@ -19,16 +19,33 @@ export const Login: React.FC = () => {
     setError('');
     setIsLoading(true);
 
-    if (password.length < 8) {
-      setError('パスワードは8文字以上で入力してください');
-      setIsLoading(false);
-      return;
-    }
+    // デモ用認証
+    if (email === 'demo@hq.com' && password === 'demo12345') {
+      try {
+        // HQ管理者としてログイン
+        await login(email, password);
+      } catch (err) {
+        setError('デモログインに失敗しました。');
+      }
+    } else if (email === 'demo@fc.com' && password === 'demo12345') {
+      try {
+        // FC管理者としてログイン
+        await login(email, password);
+      } catch (err) {
+        setError('デモログインに失敗しました。');
+      }
+    } else {
+      if (password.length < 8) {
+        setError('パスワードは8文字以上で入力してください');
+        setIsLoading(false);
+        return;
+      }
 
-    try {
-      await login(email, password);
-    } catch (err) {
-      setError('ログインに失敗しました。メールアドレスとパスワードを確認してください。');
+      try {
+        await login(email, password);
+      } catch (err) {
+        setError('ログインに失敗しました。メールアドレスとパスワードを確認してください。');
+      }
     }
     
     setIsLoading(false);
@@ -50,9 +67,28 @@ export const Login: React.FC = () => {
         width: '100%',
         maxWidth: '400px'
       }}>
-        <h1 style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <h1 style={{ textAlign: 'center', marginBottom: '1rem' }}>
           フランチャイズ実績管理システム
         </h1>
+        
+        <div style={{ 
+          backgroundColor: '#e3f2fd', 
+          padding: '1rem', 
+          borderRadius: '4px', 
+          marginBottom: '2rem',
+          fontSize: '0.9rem',
+          border: '1px solid #90caf9'
+        }}>
+          <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', color: '#1565c0' }}>
+            📋 デモアカウント
+          </div>
+          <div style={{ marginBottom: '0.3rem' }}>
+            <strong>HQ管理者:</strong> demo@hq.com / demo12345
+          </div>
+          <div>
+            <strong>FC管理者:</strong> demo@fc.com / demo12345
+          </div>
+        </div>
         
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '1rem' }}>

@@ -52,6 +52,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
+    // デモ用認証
+    if ((email === 'demo@hq.com' || email === 'demo@fc.com') && password === 'demo12345') {
+      const demoUser = {
+        uid: email === 'demo@hq.com' ? 'demo-hq-user' : 'demo-fc-user',
+        email: email,
+        emailVerified: true,
+        displayName: email === 'demo@hq.com' ? 'デモHQ管理者' : 'デモFC管理者'
+      } as FirebaseUser;
+      
+      const demoUserData = {
+        uid: demoUser.uid,
+        email: email,
+        role: email === 'demo@hq.com' ? 'HQ' : 'FC',
+        orgId: email === 'demo@hq.com' ? 'hq-org' : 'demo-fc-org',
+        isActive: true
+      } as User;
+      
+      setUser(demoUser);
+      setUserData(demoUserData);
+      return;
+    }
+    
     await signInWithEmailAndPassword(auth, email, password);
   };
 
