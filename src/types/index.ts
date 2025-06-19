@@ -1,14 +1,16 @@
 export interface Organization {
-  orgId: string;
+  id?: string;
+  orgId?: string;
   name: string;
   prefecture: string;
   address: string;
   facilityType: '児発' | '放デイ' | '就労B';
-  startDate: Date;
-  endDate?: Date;
+  startDate: Date | string;
+  endDate?: Date | string;
 }
 
 export interface User {
+  id?: string;
   uid: string;
   orgId: string;
   role: 'HQ' | 'FC';
@@ -17,6 +19,7 @@ export interface User {
 }
 
 export interface Child {
+  id?: string;
   childId: string;
   orgId: string;
   name: string;
@@ -25,6 +28,7 @@ export interface Child {
 }
 
 export interface AddOnMaster {
+  id?: string;
   addOnId: string;
   name: string;
   unitValue: number;
@@ -41,6 +45,7 @@ export interface ChildReport {
 }
 
 export interface DailyReport {
+  id?: string;
   reportId: string;
   orgId: string;
   date: string;
@@ -48,6 +53,7 @@ export interface DailyReport {
 }
 
 export interface Revenue {
+  id?: string;
   revenueId: string;
   orgId: string;
   date: string;
