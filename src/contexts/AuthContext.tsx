@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
-    // デモ用認証
+    // デモ用認証を先にチェック
     if ((email === 'demo@hq.com' || email === 'demo@fc.com') && password === 'demo12345') {
       const demoUser = {
         uid: email === 'demo@hq.com' ? 'demo-hq-user' : 'demo-fc-user',
@@ -71,9 +71,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       setUser(demoUser);
       setUserData(demoUserData);
-      return;
+      setLoading(false);
+      return Promise.resolve();
     }
     
+    // 通常のFirebase認証
     await signInWithEmailAndPassword(auth, email, password);
   };
 
