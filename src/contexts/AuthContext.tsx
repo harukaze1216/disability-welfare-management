@@ -1,12 +1,16 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import type { User as FirebaseUser } from 'firebase/auth';
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../config/firebase';
+import React, { createContext, useContext, useState } from 'react';
 import type { User } from '../types';
 
+// デモ用のFirebaseUserタイプ
+interface DemoUser {
+  uid: string;
+  email: string;
+  emailVerified: boolean;
+  displayName: string;
+}
+
 interface AuthContextType {
-  user: FirebaseUser | null;
+  user: DemoUser | null;
   userData: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -24,63 +28,40 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [user, setUser] = useState<DemoUser | null>(null);
   const [userData, setUserData] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser);
-      
-      if (firebaseUser) {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-          if (userDoc.exists()) {
-            setUserData(userDoc.data() as User);
-          }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-        }
-      } else {
-        setUserData(null);
-      }
-      
-      setLoading(false);
-    });
-
-    return unsubscribe;
-  }, []);
+  const [loading] = useState(false);
 
   const login = async (email: string, password: string) => {
-    // デモ用認証を先にチェック
+    // デモ専用認証
     if ((email === 'demo@hq.com' || email === 'demo@fc.com') && password === 'demo12345') {
-      const demoUser = {
+      const demoUser: DemoUser = {
         uid: email === 'demo@hq.com' ? 'demo-hq-user' : 'demo-fc-user',
         email: email,
         emailVerified: true,
         displayName: email === 'demo@hq.com' ? 'デモHQ管理者' : 'デモFC管理者'
-      } as FirebaseUser;
+      };
       
-      const demoUserData = {
+      const demoUserData: User = {
         uid: demoUser.uid,
         email: email,
         role: email === 'demo@hq.com' ? 'HQ' : 'FC',
         orgId: email === 'demo@hq.com' ? 'hq-org' : 'demo-fc-org',
         isActive: true
-      } as User;
+      };
       
       setUser(demoUser);
       setUserData(demoUserData);
-      setLoading(false);
-      return Promise.resolve();
+      return;
     }
     
-    // 通常のFirebase認証
-    await signInWithEmailAndPassword(auth, email, password);
+    // 他のアカウントは拒否
+    throw new Error('デモアカウント以外はサポートされていません');
   };
 
   const logout = async () => {
-    await signOut(auth);
+    setUser(null);
+    setUserData(null);
   };
 
   const value = {
